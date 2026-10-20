@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BB84 &bull; Simulador Quântico do Satélite</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --surface: #0f172a;
+      --surface-card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --cyan: #22d3ee;
+      --emerald: #34d399;
+      --rose: #fb7185;
+      --amber: #fbbf24;
+      --indigo: #818cf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top, #0f172a 0%, #070b14 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 40px;
+    }
+
+    .topbar {
+      width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .brand { font-weight: 700; font-size: 0.9rem; color: var(--cyan); display: flex; align-items: center; gap: 8px; }
+    .brand span { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 10px var(--cyan); }
+    
+    .btn-help {
+      background: rgba(34,211,238,0.1); border: 1px solid var(--cyan); color: var(--cyan);
+      padding: 5px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-help:hover { background: rgba(34,211,238,0.25); }
+
+    .stage {
+      width: 100%; max-width: 800px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative;
+    }
+
+    h1 { font-size: 1.35rem; font-weight: 800; margin-bottom: 4px; }
+    p.sub { color: var(--muted); font-size: 0.86rem; margin-bottom: 18px; line-height: 1.4; }
+
+    /* Modal de Manual / Ajuda Aprimorado */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px;
+    }
+    .modal-card {
+      background: var(--surface); border: 1px solid var(--cyan); border-radius: 16px; width: 100%; max-width: 650px;
+      padding: 28px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); max-height: 90vh; overflow-y: auto;
+    }
+    .modal-card h2 { color: var(--cyan); font-size: 1.25rem; margin-bottom: 8px; }
+    .modal-card h3 { color: var(--amber); font-size: 0.98rem; margin-top: 14px; margin-bottom: 6px; }
+    .modal-card p, .modal-card li { font-size: 0.84rem; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
+    .modal-card ul { padding-left: 18px; margin-bottom: 8px; }
+    .modal-card strong { color: var(--text); }
+    .analogy-box {
+      background: rgba(34,211,238,0.06); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 8px 0;
+    }
+
+    /* Setup */
+    .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .field-group label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+    .field-group input, .field-group select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 0.88rem; font-weight: 600; outline: none;
+    }
+    .field-group input:focus, .field-group select:focus { border-color: var(--cyan); }
+
+    /* Slots dos Fótons */
+    .photon-track { display: flex; gap: 5px; margin-bottom: 18px; }
+    .p-slot {
+      flex: 1; height: 36px; border-radius: 6px; background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .p-slot.active { border-color: var(--cyan); color: var(--text); box-shadow: 0 0 0 2px rgba(34,211,238,0.2); }
+    .p-slot.done { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.4); color: var(--emerald); }
+
+    /* Arena */
+    .arena { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    .arena-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .photon-title { font-size: 0.8rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .laser-view {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      background: rgba(255,255,255,0.015); border: 1px dashed var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px;
+    }
+    .polarizer-icon {
+      width: 54px; height: 54px; border-radius: 50%; background: var(--surface-card); border: 2px solid var(--cyan);
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: var(--cyan);
+      box-shadow: 0 0 12px rgba(34,211,238,0.2);
+    }
+
+    /* Badges Visuais Intuitivos */
+    .state-badge-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+    .state-badge {
+      background: var(--surface-card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
+      display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 700;
+    }
+    .state-badge .tag { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; }
+    .state-badge .val { color: var(--cyan); font-size: 0.95rem; }
+
+    /* Moedas e Animação 3D */
+    .coins-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width: 600px) { .coins-area { grid-template-columns: 1fr; } }
+
+    .coin-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; position: relative; }
+    .coin-card.locked { opacity: 0.5; pointer-events: none; }
+    .coin-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; }
+
+    .choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .btn-choice {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 6px;
+      cursor: pointer; font-weight: 700; font-size: 0.82rem; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .btn-choice small { font-size: 0.65rem; color: var(--muted); font-weight: 500; }
+    .btn-choice:hover { border-color: var(--cyan); }
+    .btn-choice.selected { background: rgba(34,211,238,0.2); border-color: var(--cyan); color: #fff; }
+
+    .btn-coin-flip {
+      width: 100%; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none; color: #fff;
+      padding: 9px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+    .btn-coin-flip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,0.5); }
+    
+    @keyframes coinSpin {
+      0% { transform: rotateY(0deg) scale(1); }
+      50% { transform: rotateY(720deg) scale(1.15); background: #f59e0b; }
+      100% { transform: rotateY(1440deg) scale(1); }
+    }
+    .spinning { animation: coinSpin 0.5s ease-in-out; }
+
+    .alert-box { margin-top: 12px; padding: 9px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
+    .alert-box.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; }
+    .alert-box.err { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: #fda4af; }
+
+    /* Rodapé e Sincronização com Botão Copiar Token */
+    .nav-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .btn-primary { background: var(--cyan); color: #070b14; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(34,211,238,0.3); }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-sec { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
+    .btn-sec:hover { color: var(--text); border-color: var(--text); }
+
+    .sync-box { background: var(--surface-card); border: 1px dashed var(--cyan); border-radius: 10px; padding: 14px; margin-top: 14px; font-size: 0.82rem; }
+    .sync-row { display: flex; gap: 8px; margin-top: 6px; }
+    .sync-box input { flex: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cyan); font-family: monospace; font-size: 0.78rem; outline: none; }
+    .btn-copy-token { background: var(--cyan); color: #070b14; border: none; padding: 0 14px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+    .btn-copy-token:hover { opacity: 0.9; }
+
+    /* Relatório Responsivo */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+    .metric-card .val { font-size: 1.2rem; font-weight: 800; color: var(--cyan); margin-top: 2px; }
+
+    .report-sheet { background: #fff; color: #0f172a; border-radius: 10px; padding: 20px; margin-top: 14px; font-size: 0.84rem; line-height: 1.45; }
+    .report-sheet h2 { font-size: 1.1rem; color: #0f172a; margin-bottom: 4px; }
+    .report-sheet h3 { font-size: 0.95rem; color: #1e3a8a; margin-top: 14px; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
+    .report-sheet table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75rem; }
+    .report-sheet th, .report-sheet td { border: 1px solid #cbd5e1; padding: 4px; text-align: center; }
+    .report-sheet th { background: #f1f5f9; color: #0f172a; }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .topbar, .no-print { display: none !important; }
+      .stage { border: none; box-shadow: none; padding: 0; max-width: 100%; background: #fff; }
+      .report-sheet { padding: 0; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Modal do Manual / Ajuda Teórica Aprimorado -->
+  <div class="modal-overlay" id="helpModal" style="display:none;">
+    <div class="modal-card">
+      <h2>📖 Manual Tecnológico &bull; O Poder da Criptografia Quântica (BB84)</h2>
+      <p>Este simulador demonstra como a <strong>Física Quântica</strong> revoluciona a segurança da informação na tecnologia moderna. Através do princípio da <em>superposição</em> e do <em>colapso de estado</em>, conseguimos detectar a presença de qualquer espião de forma infalível.</p>
+      
+      <h3>🔬 O que cada elemento representa na Física:</h3>
+      <ul>
+        <li><strong>Os Fótons (Partículas de Luz):</strong> São os mensageiros físicos enviados pelo laser. No mundo quântico, eles carregam a informação.</li>
+        <li><strong>A Moeda 1 (A Base / O Filtro de Polarização):</strong> Representa o "idioma" ou o ângulo do filtro óptico. Cara = Base Retilínea (`+`); Coroa = Base Diagonal (`X`). Se você tentar ler um fóton com o filtro errado, a informação se corrompe.</li>
+        <li><strong>A Moeda 2 (O Bit / O Dado):</strong> Representa a informação pura transmitida (Cara = `1`; Coroa = `0`). <em>Nota:</em> O bit não altera a base; a base correta é que ilumina e revela o bit nativo do fóton!</li>
+        <li><strong>O Espião e o Colapso Quântico:</strong> Na mecânica quântica, medir um sistema quântico sem conhecer sua base destrói seu estado original (Efeito do Observador). Quando o espião erra a base, ele obrigatoriamente altera o fóton que segue adiante, gerando erros matemáticos detectáveis.</li>
+      </ul>
+
+      <div class="analogy-box">
+        💡 <strong>Analogia Minimalista:</strong> Imagine enviar um bilhete secreto escrito em tinta invisível dentro de uma caixa trancada. Se o espião tentar abrir a caixa sem a chave certa (base errada), o mecanismo destrói o bilhete ou o altera irremediavelmente. Ao comparar amostras públicas no final, os parceiros legítimos percebem que a caixa foi violada se a taxa de erros passar de <strong>11%</strong>.
+      </div>
+
+      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="toggleHelp(false)">Entendido, Fechar Manual ➔</button>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand"><span></span> BB84 &bull; Simulador Quântico</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="btn-help" onclick="toggleHelp(true)">📖 Manual Tecnológico</button>
+      <div style="font-size:0.75rem; color:var(--muted);" id="topRoleLabel">Configuração</div>
+    </div>
+  </div>
+
+  <div class="stage" id="mainStage"></div>
+
+<script>
+  const state = {
+    screen: 'setup',
+    currentIdx: 0,
+    role: 'emissor',
+    players: { emissor: 'Irlan Pereira de Souza', espiao: 'ISA GUEDES', receptor: 'SANTANA' },
+    photons: Array.from({ length: 10 }, (_, i) => ({
+      id: i + 1,
+      eC1: null, eC2: null,
+      sC1: null, sC2: null,
+      rC1: null, rC2: null
+    }))
+  };
+
+  function toggleHelp(show) {
+    document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
+  }
+
+  const toB = c => c === 'Cara' ? '+' : 'X';
+  const toBt = c => c === 'Cara' ? 1 : 0;
+  const sym = (b, bit) => (b === '+' ? (bit === 1 ? '|' : '-') : (bit === 1 ? '/' : '\\'));
+
+  function evalPhoton(p) {
+    const eB = p.eC1 ? toB(p.eC1) : null;
+    const eBit = p.eC2 ? toBt(p.eC2) : null;
+    const eSym = (eB && eBit !== null) ? sym(eB, eBit) : null;
+
+    const sB = p.sC1 ? toB(p.sC1) : null;
+    const sMatch = (sB && eB) ? (sB === eB) : false;
+    const sBit = !p.sC1 ? null : (sMatch ? eBit : (p.sC2 !== null ? toBt(p.sC2) : null));
+    const sSym = (sB && sBit !== null) ? sym(sB, sBit) : null;
+
+    const rB = p.rC1 ? toB(p.rC1) : null;
+    const rMatch = (rB && sB) ? (rB === sB) : false;
+    const rBit = !p.rC1 ? null : (rMatch ? sBit : (p.rC2 !== null ? toBt(p.rC2) : null));
+
+    const kept = (eB && rB) ? (eB === rB) : false;
+    const error = kept && (eBit !== rBit);
+
+    return { eB, eBit, eSym, sB, sMatch, sBit, sSym, rB, rMatch, rBit, kept, error };
+  }
+
+  function render() {
+    const stage = document.getElementById('mainStage');
+    document.getElementById('topRoleLabel').innerText = `Papel: ${state.role.toUpperCase()}`;
+
+    if (state.screen === 'setup') {
+      stage.innerHTML = `
+        <h1>Simulador BB84 &bull; Projeto Córtex</h1>
+        <p class="sub">Defina os nomes do trio e o seu papel inicial. Consulte o <strong>Manual Tecnológico</strong> acima para compreender os conceitos físicos da dinâmica.</p>
+
+        <div class="setup-grid">
+          <div class="field-group"><label>📡 Emissor (Terra)</label><input type="text" id="ne" value="${state.players.emissor}" /></div>
+          <div class="field-group"><label>🕵️ Espião (Hacker)</label><input type="text" id="ns" value="${state.players.espiao}" /></div>
+          <div class="field-group"><label>🛰️ Receptor (Satélite)</label><input type="text" id="nr" value="${state.players.receptor}" /></div>
+          <div class="field-group">
+            <label>👤 Seu Papel</label>
+            <select id="selRole">
+              <option value="emissor">Emissor (Antártica)</option>
+              <option value="espiao">Espião (Hacker)</option>
+              <option value="receptor">Receptor (Satélite)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nav-footer">
+          <span style="font-size:0.78rem; color:var(--muted);">10 Fótons &bull; Validação automática de 11%</span>
+          <button class="btn-primary" onclick="initGame()">Iniciar Simulação &rarr;</button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.screen === 'sync_e') {
+      const token = btoa(JSON.stringify(state.photons));
+      stage.innerHTML = `
+        <h1>Emissor Finalizado!</h1>
+        <p class="sub">Os 10 fótons do Emissor foram travados. Copie o token abaixo e envie no WhatsApp para o <strong>Espião (${state.players.espiao})</strong>.</p>
+        <div class="sync-box">
+          <strong>📲 Token Quântico (Emissor &rarr; Espião):</strong>
+          <div class="sync-row">
+            <input type="text" readonly id="tokenInput" value="${token}" />
+            <button class="btn-copy-token" onclick="copyTokenField('tokenInput', this)">📋 Copiar Token</button>
+          </div>
+        </div>
+        <div class="nav-footer" style="margin-top:16px;">
+          <button class="btn-sec" onclick="setScreen('emissor', 9)">&larr; Voltar e Revisar</button>
+          <button class="btn-primary" onclick="setScreen('espiao', 0)">Alternar para Visão do Espião &rarr;</button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.screen === 'sync_s') {
+      const token = btoa(JSON.stringify(state.photons));
+      stage.innerHTML = `
+        <h1>Ataque do Espião Concluído!</h1>
+        <p class="sub">As medições do espião foram travadas. Copie o token abaixo e envie no WhatsApp para o <strong>Receptor (${state.players.receptor})</strong>.</p>
+        <div class="sync-box">
+          <strong>📲 Token Quântico (Espião &rarr; Receptor):</strong>
+          <div class="sync-row">
+            <input type="text" readonly id="tokenInput2" value="${token}" />
+            <button class="btn-copy-token" onclick="copyTokenField('tokenInput2', this)">📋 Copiar Token</button>
+          </div>
+        </div>
+        <div class="nav-footer" style="margin-top:16px;">
+          <button class="btn-sec" onclick="setScreen('espiao', 9)">&larr; Voltar e Revisar</button>
+          <button class="btn-primary" onclick="setScreen('receptor', 0)">Alternar para Visão do Receptor &rarr;</button>
+        </div>
+      `;
+      return;
+    }
+
+    if (state.screen === 'emissor' || state.screen === 'espiao' || state.screen === 'receptor') {
+      renderActiveRole(stage);
+      return;
+    }
+
+    if (state.screen === 'relatorio') {
+      renderReport(stage);
+    }
+  }
+
+  function initGame() {
+    state.players.emissor = document.getElementById('ne').value || 'Emissor';
+    state.players.espiao = document.getElementById('ns').value || 'Espião';
+    state.players.receptor = document.getElementById('nr').value || 'Receptor';
+    state.role = document.getElementById('selRole').value;
+    setScreen(state.role, 0);
+  }
+
+  function setScreen(scr, idx) {
+    state.screen = scr;
+    state.currentIdx = idx;
+    if(scr === 'emissor' || scr === 'espiao' || scr === 'receptor') state.role = scr;
+    render();
+  }
+
+  function renderActiveRole(stage) {
+    const idx = state.currentIdx;
+    const p = state.photons[idx];
+    const info = evalPhoton(p);
+
+    const titles = { emissor: `Turno: ${state.players.emissor} (Emissor)`, espiao: `Turno: ${state.players.espiao} (Espião)`, receptor: `Turno: ${state.players.receptor} (Receptor)` };
+
+    const slots = state.photons.map((ph, i) => {
+      const inf = evalPhoton(ph);
+      const ok = state.role === 'emissor' ? (ph.eC1 && ph.eC2) : (state.role === 'espiao' ? (ph.sC1 && (inf.sMatch || ph.sC2 !== null)) : (ph.rC1 && (inf.rMatch || ph.rC2 !== null)));
+      const symShow = state.role === 'emissor' ? inf.eSym : (state.role === 'espiao' ? inf.sSym : (inf.rBit !== null ? inf.rBit : '—'));
+      return `<div class="p-slot ${i === idx ? 'active' : ''} ${ok ? 'done' : ''}" onclick="state.currentIdx=${i};render();">${ok ? symShow : (i+1)}</div>`;
+    }).join('');
+
+    let stateBadgeHtml = '';
+    if (state.role === 'emissor' && p.eC1 && p.eC2) {
+      stateBadgeHtml = `
+        <div class="state-badge-container">
+          <div class="state-badge"><span class="tag">Base (Moeda 1):</span> <span class="val">${info.eB} (${p.eC1})</span></div>
+          <div class="state-badge"><span class="tag">Bit (Moeda 2):</span> <span class="val">${info.eBit} (${p.eC2})</span></div>
+        </div>`;
+    } else if (state.role === 'espiao' && p.sC1) {
+      stateBadgeHtml = `
+        <div class="state-badge-container">
+          <div class="state-badge"><span class="tag">Base Espião:</span> <span class="val">${info.sB} (${p.sC1})</span></div>
+          ${p.sC2 !== null ? `<div class="state-badge"><span class="tag">Bit Chutado:</span> <span class="val">${info.sBit}</span></div>` : ''}
+        </div>`;
+    } else if (state.role === 'receptor' && p.rC1) {
+      stateBadgeHtml = `
+        <div class="state-badge-container">
+          <div class="state-badge"><span class="tag">Base Satélite:</span> <span class="val">${info.rB} (${p.rC1})</span></div>
+          ${p.rC2 !== null ? `<div class="state-badge"><span class="tag">Bit Lido:</span> <span class="val">${info.rBit}</span></div>` : ''}
+        </div>`;
+    }
+
+    if (state.role === 'emissor') {
+      const lockedC1 = p.eC1 !== null;
+      const lockedC2 = p.eC2 !== null;
+      const ready = lockedC1 && lockedC2;
+      arena = `
+        <div class="laser-view">
+          <div style="font-size:0.75rem; color:var(--muted);">FÓTON GERADO:</div>
+          <div class="polarizer-icon" id="polarizerAnim">${ready ? info.eSym : '?'}</div>
+          <div style="font-size:0.82rem; color:var(--cyan); font-weight:600;">${ready ? `Base ${info.eB} &bull; Bit${info.eBit}` : 'Jogue as moedas'}</div>
+        </div>
+        ${stateBadgeHtml}
+        <div class="coins-area">
+          <div class="coin-card ${lockedC1 ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 1: Base</span> <span>${p.eC1 || ''}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.eC1==='Cara'?'selected':''}" onclick="pick('eC1','Cara')">Cara (+) <small>Retilínea</small></button>
+              <button class="btn-choice ${p.eC1==='Coroa'?'selected':''}" onclick="pick('eC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('eC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
+          </div>
+          <div class="coin-card ${lockedC2 ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 2: Bit</span> <span>${p.eC2 || ''}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.eC2==='Cara'?'selected':''}" onclick="pick('eC2','Cara')">Cara (1) <small>Bit 1</small></button>
+              <button class="btn-choice ${p.eC2==='Coroa'?'selected':''}" onclick="pick('eC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('eC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Bit travado</div>' : ''}
+          </div>
+        </div>
+      `;
+    } else if (state.role === 'espiao') {
+      const lockedC1 = p.sC1 !== null;
+      const needC2 = lockedC1 && !info.sMatch;
+      const lockedC2 = p.sC2 !== null;
+      const ready = lockedC1 && (info.sMatch || lockedC2);
+
+      arena = `
+        <div class="laser-view">
+          <div style="text-align:right;"><div style="font-size:0.7rem; color:var(--muted);">CHEGOU:</div><div style="font-size:1rem; font-weight:700; color:var(--cyan);">${info.eSym || '—'}</div></div>
+          <div class="polarizer-icon" style="border-color:${ready ? (info.sMatch ? 'var(--emerald)' : 'var(--rose)') : 'var(--border)'}">${ready ? info.sSym : '?'}</div>
+          <div style="text-align:left;"><div style="font-size:0.7rem; color:var(--muted);">REPASSADO:</div><div style="font-size:1rem; font-weight:700; color:var(--amber);">${ready ? info.sSym : '...'}</div></div>
+        </div>
+        ${stateBadgeHtml}
+        <div class="coins-area">
+          <div class="coin-card ${lockedC1 ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 1: Base do Espião</span> <span>${p.sC1 || ''}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.sC1==='Cara'?'selected':''}" onclick="pick('sC1','Cara')">Cara (+) <small>Retilínea</small></button>
+              <button class="btn-choice ${p.sC1==='Coroa'?'selected':''}" onclick="pick('sC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('sC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
+          </div>
+          <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 2: Chute (Colapso)</span> <span>${p.sC2 !== null ? p.sC2 : (info.sMatch ? 'Dispensada' : '')}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.sC2==='Cara'?'selected':''}" onclick="pick('sC2','Cara')">Cara (1) <small>Chutar 1</small></button>
+              <button class="btn-choice ${p.sC2==='Coroa'?'selected':''}" onclick="pick('sC2','Coroa')">Coroa (0) <small>Chutar 0</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('sC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Chute travado</div>' : ''}
+          </div>
+        </div>
+        ${lockedC1 ? (info.sMatch ? `
+          <div class="alert-box ok">✅ Acertou a base (${info.sB})! O bit nativo (${info.sBit}) foi lido perfeitamente sem precisar da Moeda 2.</div>
+        ` : `
+          <div class="alert-box err">⚡ Errou a base! O fóton sofreu colapso quântico. Jogue a Moeda 2 ao lado para sortear o bit.</div>
+        `) : ''}
+      `;
+    } else if (state.role === 'receptor') {
+      const lockedC1 = p.rC1 !== null;
+      const needC2 = lockedC1 && !info.rMatch;
+      const lockedC2 = p.rC2 !== null;
+      const ready = lockedC1 && (info.rMatch || lockedC2);
+
+      arena = `
+        <div class="laser-view">
+          <div style="text-align:right;"><div style="font-size:0.7rem; color:var(--muted);">RECEBEU:</div><div style="font-size:1rem; font-weight:700; color:var(--amber);">${info.sSym || '—'}</div></div>
+          <div class="polarizer-icon">${ready ? info.rBit : '?'}</div>
+          <div style="text-align:left;"><div style="font-size:0.7rem; color:var(--muted);">LIDO:</div><div style="font-size:1rem; font-weight:700; color:var(--emerald);">${ready ? `Bit ${info.rBit}` : '...'}</div></div>
+        </div>
+        ${stateBadgeHtml}
+        <div class="coins-area">
+          <div class="coin-card ${lockedC1 ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 1: Base do Satélite</span> <span>${p.rC1 || ''}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.rC1==='Cara'?'selected':''}" onclick="pick('rC1','Cara')">Cara (+) <small>Retilínea</small></button>
+              <button class="btn-choice ${p.rC1==='Coroa'?'selected':''}" onclick="pick('rC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('rC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
+          </div>
+          <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
+            <div class="coin-label"><span>Moeda 2: Leitura por Colapso</span> <span>${p.rC2 !== null ? p.rC2 : (info.rMatch ? 'Dispensada' : '')}</span></div>
+            <div class="choice-row">
+              <button class="btn-choice ${p.rC2==='Cara'?'selected':''}" onclick="pick('rC2','Cara')">Cara (1) <small>Bit 1</small></button>
+              <button class="btn-choice ${p.rC2==='Coroa'?'selected':''}" onclick="pick('rC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
+            </div>
+            <button class="btn-coin-flip" onclick="flipCoinAnim('rC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Leitura travada</div>' : ''}
+          </div>
+        </div>
+        ${lockedC1 ? (info.rMatch ? `
+          <div class="alert-box ok">✅ Base compatível! Leitura direta obtida com sucesso.</div>
+        ` : `
+          <div class="alert-box err">⚡ Base incompatível! O fóton colapsou. Jogue a Moeda 2 para definir o bit lido.</div>
+        `) : ''}
+      `;
+    }
+
+    const currentOk = state.role === 'emissor' ? (p.eC1 && p.eC2) : (state.role === 'espiao' ? (p.sC1 && (info.sMatch || p.sC2 !== null)) : (p.rC1 && (info.rMatch || p.rC2 !== null)));
+    const allDone = state.photons.every(ph => {
+      const inf = evalPhoton(ph);
+      return state.role === 'emissor' ? (ph.eC1 && ph.eC2) : (state.role === 'espiao' ? (ph.sC1 && (inf.sMatch || ph.sC2 !== null)) : (ph.rC1 && (inf.rMatch || ph.rC2 !== null)));
+    });
+
+    stage.innerHTML = `
+      <h1>${titles[state.role]}</h1>
+      <p class="sub">Fóton <strong>${idx + 1} de 10</strong>. Jogue a moeda real com animação ou selecione manualmente. As escolhas travam automaticamente após o lançamento.</p>
+
+      <div class="photon-track">${slots}</div>
+
+      <div class="arena">
+        <div class="arena-top">
+          <span class="photon-title">Fóton #${idx + 1}</span>
+          <button class="btn-sec" style="padding:3px 8px; font-size:0.7rem;" onclick="autoFill('${state.role}')">⚡ Preencher Restantes</button>
+        </div>
+        ${arena}
+      </div>
+
+      <div class="sync-box" style="margin-bottom:12px;">
+        <strong>🔗 Sincronização via WhatsApp com o Trio:</strong><br>
+        <span style="color:var(--muted); font-size:0.75rem;">Cole o token do colega aqui para carregar a etapa dele:</span>
+        <div class="sync-row">
+          <input type="text" id="importInput" placeholder="Cole o token aqui..." />
+          <button class="btn-copy-token" style="background:var(--surface-card); color:var(--cyan); border:1px solid var(--cyan);" onclick="importToken(document.getElementById('importInput').value)">📥 Carregar</button>
+        </div>
+      </div>
+
+      <div class="nav-footer">
+        <button class="btn-sec" onclick="if(state.currentIdx>0){state.currentIdx--;render();}" ${idx===0?'disabled':''}>&larr; Anterior</button>
+        <div style="display:flex; gap:6px;">
+          ${idx < 9 ? `
+            <button class="btn-primary" onclick="state.currentIdx++;render();" ${!currentOk?'disabled':''}>Próximo Fóton &rarr;</button>
+          ` : `
+            <button class="btn-primary" style="background:var(--emerald);" onclick="finishRole('${state.role}')" ${!allDone?'disabled':''}>
+              ${state.role === 'emissor' ? 'Gerar Token para o Espião ➔' : (state.role === 'espiao' ? 'Gerar Token para o Receptor ➔' : 'Ver Relatório Final ➔')}
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  function pick(field, val) {
+    const p = state.photons[state.currentIdx];
+    if (p[field] !== null) return;
+    p[field] = val;
+    render();
+  }
+
+  function flipCoinAnim(field, btnEl) {
+    const p = state.photons[state.currentIdx];
+    if (p[field] !== null) return;
+
+    btnEl.classList.add('spinning');
+    btnEl.innerText = '🪙 Sorteando...';
+
+    setTimeout(() => {
+      p[field] = Math.random() < 0.5 ? 'Cara' : 'Coroa';
+      render();
+    }, 500);
+  }
+
+  function copyTokenField(inputId, btnEl) {
+    const input = document.getElementById(inputId);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value);
+    const originalText = btnEl.innerText;
+    btnEl.innerText = '✅ Copiado!';
+    setTimeout(() => { btnEl.innerText = originalText; }, 2000);
+  }
+
+  function autoFill(role) {
+    state.photons.forEach(ph => {
+      if (role === 'emissor') { ph.eC1 = ph.eC1 || (Math.random()<0.5?'Cara':'Coroa'); ph.eC2 = ph.eC2 || (Math.random()<0.5?'Cara':'Coroa'); }
+      else if (role === 'espiao') { ph.sC1 = ph.sC1 || (Math.random()<0.5?'Cara':'Coroa'); const inf = evalPhoton(ph); if(!inf.sMatch && ph.sC2 === null) ph.sC2 = ph.sC2 || (Math.random()<0.5?'Cara':'Coroa'); }
+      else if (role === 'receptor') { ph.rC1 = ph.rC1 || (Math.random()<0.5?'Cara':'Coroa'); const inf = evalPhoton(ph); if(!inf.rMatch && ph.rC2 === null) ph.rC2 = ph.rC2 || (Math.random()<0.5?'Cara':'Coroa'); }
+    });
+    state.currentIdx = 9; render();
+  }
+
+  function finishRole(role) {
+    if (role === 'emissor') state.screen = 'sync_e';
+    else if (role === 'espiao') state.screen = 'sync_s';
+    else state.screen = 'relatorio';
+    render();
+  }
+
+  function importToken(token) {
+    try {
+      const decoded = JSON.parse(atob(token));
+      if (Array.isArray(decoded) && decoded.length === 10) {
+        state.photons = decoded;
+        alert('✅ Dados sincronizados com sucesso!');
+        render();
+      }
+    } catch(e) { alert('❌ Token inválido.'); }
+  }
+
+  function renderReport(stage) {
+    const data = state.photons.map(evalPhoton);
+    const kept = data.filter(d => d.kept);
+    const N = kept.length;
+    const discarded = 10 - N;
+    const M = kept.filter(d => d.error).length;
+    const globalRate = N > 0 ? ((M / N) * 100) : 0;
+    const test2 = kept.slice(0, 2);
+    const testErr = test2.filter(d => d.error).length;
+    const qber = test2.length > 0 ? ((testErr / test2.length) * 100) : 0;
+
+    const rawE = kept.map(d => d.eBit).join(' ');
+    const rawR = kept.map(d => d.rBit).join(' ');
+    const secRounds = kept.slice(2);
+    const secE = secRounds.length > 0 ? secRounds.map(d => d.eBit).join(' ') : 'N/A';
+    const secR = secRounds.length > 0 ? secRounds.map(d => d.rBit).join(' ') : 'N/A';
+
+    const rows = data.map(d => `
+      <tr>
+        <td><strong>${d.id}</strong></td>
+        <td>${d.eB}&bull;${d.eBit}</td>
+        <td><strong>${d.eSym}</strong></td>
+        <td>${d.sB || '—'}</td>
+        <td><strong>${d.sSym || '—'}</strong></td>
+        <td>${d.rB || '—'}</td>
+        <td>${d.rBit !== null ? d.rBit : '—'}</td>
+        <td><strong>${d.kept ? 'MANTIDO' : 'DESCARTADO'}</strong></td>
+        <td style="color:${d.error?'#dc2626':'#059669'}; font-weight:700;">${d.kept ? (d.error ? 'ERRO' : 'OK') : '—'}</td>
+      </tr>
+    `).join('');
+
+    stage.innerHTML = `
+      <div class="no-print">
+        <h1>Relatório Final &bull; Prática 1 (BB84)</h1>
+        <p class="sub">Resultados consolidados com peneiramento, QBER e validação de segurança de 11%.</p>
+
+        <div class="metrics-grid">
+          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">MANTIDOS (N)</div><div class="val">${N} / ${discarded}</div></div>
+          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">QBER (2 BITS)</div><div class="val" style="color:${qber>11?'var(--rose)':'var(--emerald)'}">${qber.toFixed(0)}%</div></div>
+          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">TAXA GLOBAL (M/N)</div><div class="val" style="color:${globalRate>11?'var(--rose)':'var(--emerald)'}">${globalRate.toFixed(1)}%</div></div>
+          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">STATUS 11%</div><div class="val" style="font-size:0.88rem; color:${qber>11||globalRate>11?'var(--rose)':'var(--amber)'}">${qber>11||globalRate>11?'🚨 ESPIÃO DETECTADO':'⚠️ ALERTA'}</div></div>
+        </div>
+
+        <div class="nav-footer" style="margin-bottom:12px;">
+          <button class="btn-sec" onclick="setScreen('receptor', 9)">&larr; Voltar</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-primary" onclick="copyRep()">📋 Copiar Relatório</button>
+            <button class="btn-primary" style="background:var(--indigo); color:#fff;" onclick="window.print()">🖨️ Salvar em PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-sheet" id="repContent">
+        <h2>Relatório da Prática 1: O Token do Satélite Quântico (BB84)</h2>
+        <p><strong>Curso 2 – Projeto Córtex:</strong> Princípios da Física Quântica &bull; Módulo 1<br>
+        <strong>Formadora:</strong> Dra. Judite &bull; <strong>Mentora:</strong> Dra. Viridiana Alves de Lara</p>
+
+        <h3>1. Identificação do Trio</h3>
+        <ul>
+          <li><strong>Emissor:</strong> ${state.players.emissor}</li>
+          <li><strong>Espião:</strong> ${state.players.espiao}</li>
+          <li><strong>Receptor:</strong> ${state.players.receptor}</li>
+        </ul>
+
+        <h3>2. Tabela Consolidada das 10 Rodadas</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Emissor</th>
+              <th>Fóton</th>
+              <th>Espião</th>
+              <th>Repassado</th>
+              <th>Satélite</th>
+              <th>Bit Lido</th>
+              <th>Peneiramento</th>
+              <th>Divergência</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <h3>3. Análise de Segurança</h3>
+        <p><strong>1. Bits mantidos (N) e descartados:</strong> ${N} mantidos e ${discarded} descartados.</p>
+        <p><strong>2. Chaves:</strong> Bruta Emissor [<code>${rawE}</code>] | Bruta Receptor [<code>${rawR}</code>] | Secreta Final [<code>${secE}</code>]</p>
+        <p><strong>3. Taxa de Erro:</strong> QBER amostral = ${qber.toFixed(1)}% | Taxa global M/N = ${globalRate.toFixed(1)}%.</p>
+        <p><strong>4. Limite de 11%:</strong> ${qber>11||globalRate>11 ? 'Acima de 11%: Espião detectado e chave abortada.' : 'Abaixo de 11%, porém sujeito ao risco estatístico de amostras pequenas.'}</p>
+      </div>
+    `;
+  }
+
+  function copyRep() {
+    const el = document.getElementById('repContent');
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.execCommand('copy'); window.getSelection().removeAllRanges();
+    alert('✅ Relatório copiado para a área de transferência!');
+  }
+
+  render();
+</script>
+</body>
+</html>
