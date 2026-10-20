@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BB84 &bull; Simulador Quântico do Satélite</title>
+  <title>BB84 &bull; Laboratório Quântico do Satélite</title>
   <style>
     :root {
       --bg: #070b14;
@@ -58,17 +58,46 @@
       backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px;
     }
     .modal-card {
-      background: var(--surface); border: 1px solid var(--cyan); border-radius: 16px; width: 100%; max-width: 650px;
+      background: var(--surface); border: 1px solid var(--cyan); border-radius: 16px; width: 100%; max-width: 720px;
       padding: 28px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); max-height: 90vh; overflow-y: auto;
     }
     .modal-card h2 { color: var(--cyan); font-size: 1.25rem; margin-bottom: 8px; }
-    .modal-card h3 { color: var(--amber); font-size: 0.98rem; margin-top: 14px; margin-bottom: 6px; }
-    .modal-card p, .modal-card li { font-size: 0.84rem; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
-    .modal-card ul { padding-left: 18px; margin-bottom: 8px; }
+    .modal-card h3 { color: var(--amber); font-size: 0.98rem; margin-top: 18px; margin-bottom: 6px; }
+    .modal-card h4 { color: var(--text); font-size: 0.86rem; margin-top: 10px; margin-bottom: 3px; }
+    .modal-card p, .modal-card li { font-size: 0.84rem; color: var(--muted); margin-bottom: 6px; line-height: 1.55; }
+    .modal-card ul, .modal-card ol { padding-left: 18px; margin-bottom: 8px; }
     .modal-card strong { color: var(--text); }
-    .analogy-box {
-      background: rgba(34,211,238,0.06); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 8px 0;
+    .modal-card code {
+      background: rgba(34,211,238,0.1); color: var(--cyan); padding: 1px 5px; border-radius: 4px;
+      font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.8em;
     }
+    .analogy-box {
+      background: rgba(34,211,238,0.06); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+    }
+    .manual-lead { font-size: 0.9rem !important; color: var(--text) !important; }
+    .manual-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+    .manual-toc a {
+      font-size: 0.72rem; font-weight: 700; text-decoration: none; color: var(--muted);
+      border: 1px solid var(--border); background: var(--bg); border-radius: 99px; padding: 4px 10px;
+    }
+    .manual-toc a:hover { color: var(--cyan); border-color: var(--cyan); }
+    .step-list { counter-reset: step; list-style: none; padding-left: 0 !important; }
+    .step-list li { position: relative; padding-left: 28px; }
+    .step-list li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 0; top: 1px; width: 19px; height: 19px; border-radius: 50%;
+      background: rgba(34,211,238,0.14); border: 1px solid var(--cyan); color: var(--cyan);
+      font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .manual-table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 0.78rem; }
+    .manual-table th, .manual-table td { border: 1px solid var(--border); padding: 5px 7px; text-align: left; color: var(--muted); }
+    .manual-table th { background: var(--surface-card); color: var(--text); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .manual-table td strong { color: var(--cyan); }
+    .manual-note {
+      background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.28); border-radius: 8px;
+      padding: 9px 12px; margin: 10px 0; font-size: 0.8rem; color: #fcd34d;
+    }
+    .manual-note strong { color: var(--amber); }
 
     /* Setup */
     .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
@@ -117,6 +146,7 @@
 
     .coin-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; position: relative; }
     .coin-card.locked { opacity: 0.5; pointer-events: none; }
+    .coin-card.spinning-card { pointer-events: none; }
     .coin-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; }
 
     .choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
@@ -133,14 +163,81 @@
       padding: 9px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
       display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);
     }
-    .btn-coin-flip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,0.5); }
-    
-    @keyframes coinSpin {
-      0% { transform: rotateY(0deg) scale(1); }
-      50% { transform: rotateY(720deg) scale(1.15); background: #f59e0b; }
-      100% { transform: rotateY(1440deg) scale(1); }
+    .btn-coin-flip:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,0.5); }
+    .btn-coin-flip:disabled { opacity: 0.55; cursor: wait; }
+
+    /* Moeda 3D com acabamento metálico */
+    .coin-scene {
+      perspective: 900px; height: 108px; display: flex; align-items: center; justify-content: center;
+      margin: 0 0 10px; position: relative;
     }
-    .spinning { animation: coinSpin 0.5s ease-in-out; }
+    .coin-scene::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+      width: 64px; height: 10px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.6), transparent 70%); filter: blur(2px);
+    }
+    .coin3d { width: 86px; height: 86px; position: relative; transform-style: preserve-3d; will-change: transform; }
+    .coin3d.show-back { transform: rotateY(180deg); }
+    .coin3d.spin-front { animation: coinSpinFront 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+    .coin3d.spin-back { animation: coinSpinBack 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+
+    .coin-face {
+      position: absolute; inset: 0; border-radius: 50%;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background:
+        radial-gradient(circle at 32% 26%, #fff8d6 0%, #f9e07e 13%, #ecc247 32%, #cf9b24 56%, #9c6c0f 80%, #5f3d05 100%);
+      box-shadow:
+        inset 0 0 0 3px rgba(255,246,197,0.55),
+        inset 0 0 0 5px rgba(122,79,8,0.6),
+        inset 0 2px 3px rgba(255,255,255,0.35),
+        inset 0 12px 18px rgba(255,255,255,0.32),
+        inset 0 -14px 22px rgba(60,35,0,0.55),
+        inset -8px 0 14px rgba(80,50,0,0.3),
+        0 9px 18px rgba(0,0,0,0.5);
+      border: 1px solid #6b4708;
+      overflow: hidden;
+    }
+    .coin-face::before {
+      content: ''; position: absolute; inset: 7px; border-radius: 50%;
+      border: 1px dashed rgba(107,71,8,0.45);
+      box-shadow: inset 0 0 0 1px rgba(255,250,215,0.3);
+    }
+    .coin-face::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+      background: linear-gradient(130deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.16) 22%, transparent 46%, transparent 72%, rgba(255,255,255,0.14) 100%);
+      mix-blend-mode: screen;
+    }
+    .coin-front { transform: rotateY(0deg); }
+    .coin-back { transform: rotateY(180deg); }
+    .coin-word {
+      font-size: 0.5rem; letter-spacing: 0.14em; font-weight: 800; color: #6b4708;
+      text-shadow: 0 1px 0 rgba(255,248,210,0.75); position: relative; z-index: 2;
+    }
+    .coin-symbol {
+      font-size: 2rem; line-height: 1; font-weight: 900; color: #7a4f08;
+      text-shadow: 0 1px 0 rgba(255,250,220,0.8), 0 -1px 1px rgba(60,35,0,0.5);
+      position: relative; z-index: 2; margin: 1px 0;
+    }
+    .coin-stars { font-size: 0.42rem; letter-spacing: 0.32em; color: rgba(107,71,8,0.8); position: relative; z-index: 2; }
+
+    @keyframes coinSpinFront {
+      0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
+      18%  { transform: translateY(-26px) rotateY(180deg) rotateX(10deg); }
+      50%  { transform: translateY(-34px) rotateY(900deg) rotateX(6deg) scale(1.05); }
+      82%  { transform: translateY(-8px) rotateY(1260deg) rotateX(2deg); }
+      100% { transform: translateY(0) rotateY(1440deg) rotateX(0deg); }
+    }
+    @keyframes coinSpinBack {
+      0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
+      18%  { transform: translateY(-26px) rotateY(180deg) rotateX(10deg); }
+      50%  { transform: translateY(-34px) rotateY(945deg) rotateX(6deg) scale(1.05); }
+      82%  { transform: translateY(-8px) rotateY(1350deg) rotateX(2deg); }
+      100% { transform: translateY(0) rotateY(1620deg) rotateX(0deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .coin3d.spin-front, .coin3d.spin-back { animation-duration: 0.01ms; }
+    }
 
     .alert-box { margin-top: 12px; padding: 9px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
     .alert-box.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; }
@@ -182,32 +279,144 @@
 </head>
 <body>
 
-  <!-- Modal do Manual / Ajuda Teórica Aprimorado -->
+  <!-- Manual de Instruções completo -->
   <div class="modal-overlay" id="helpModal" style="display:none;">
     <div class="modal-card">
-      <h2>📖 Manual Tecnológico &bull; O Poder da Criptografia Quântica (BB84)</h2>
-      <p>Este simulador demonstra como a <strong>Física Quântica</strong> revoluciona a segurança da informação na tecnologia moderna. Através do princípio da <em>superposição</em> e do <em>colapso de estado</em>, conseguimos detectar a presença de qualquer espião de forma infalível.</p>
-      
-      <h3>🔬 O que cada elemento representa na Física:</h3>
-      <ul>
-        <li><strong>Os Fótons (Partículas de Luz):</strong> São os mensageiros físicos enviados pelo laser. No mundo quântico, eles carregam a informação.</li>
-        <li><strong>A Moeda 1 (A Base / O Filtro de Polarização):</strong> Representa o "idioma" ou o ângulo do filtro óptico. Cara = Base Retilínea (`+`); Coroa = Base Diagonal (`X`). Se você tentar ler um fóton com o filtro errado, a informação se corrompe.</li>
-        <li><strong>A Moeda 2 (O Bit / O Dado):</strong> Representa a informação pura transmitida (Cara = `1`; Coroa = `0`). <em>Nota:</em> O bit não altera a base; a base correta é que ilumina e revela o bit nativo do fóton!</li>
-        <li><strong>O Espião e o Colapso Quântico:</strong> Na mecânica quântica, medir um sistema quântico sem conhecer sua base destrói seu estado original (Efeito do Observador). Quando o espião erra a base, ele obrigatoriamente altera o fóton que segue adiante, gerando erros matemáticos detectáveis.</li>
-      </ul>
+      <h2>📖 Manual de Instruções &bull; BB84, o Token do Satélite</h2>
+      <p class="manual-lead">Bem-vindo ao <strong>bb84-quantum-lab</strong>. Você vai participar de uma missão de três pessoas: enviar uma chave secreta da Estação Antártica para um satélite, sabendo que um espião pode estar no caminho. A diferença é que aqui a segurança não vem de uma senha, mas das <strong>leis da física quântica</strong>.</p>
 
       <div class="analogy-box">
-        💡 <strong>Analogia Minimalista:</strong> Imagine enviar um bilhete secreto escrito em tinta invisível dentro de uma caixa trancada. Se o espião tentar abrir a caixa sem a chave certa (base errada), o mecanismo destrói o bilhete ou o altera irremediavelmente. Ao comparar amostras públicas no final, os parceiros legítimos percebem que a caixa foi violada se a taxa de erros passar de <strong>11%</strong>.
+        <strong>A missão em uma frase:</strong> o Emissor prepara fótons com bases e bits sorteados; o Espião tenta interceptá-los; o Receptor mede o que chega. No fim, Emissor e Receptor comparam uma pequena amostra e, se houver erros demais, a física denunciou a espionagem.
       </div>
 
-      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="toggleHelp(false)">Entendido, Fechar Manual ➔</button>
+      <div class="manual-toc">
+        <a href="#m-elenco">Elenco</a>
+        <a href="#m-fisica">Física</a>
+        <a href="#m-moedas">Moedas</a>
+        <a href="#m-rodada">Passo a passo</a>
+        <a href="#m-tela">A tela</a>
+        <a href="#m-token">Token</a>
+        <a href="#m-relatorio">Relatório</a>
+        <a href="#m-limites">Limitações</a>
+        <a href="#m-glossario">Glossário</a>
+      </div>
+
+      <h3 id="m-elenco">1. O elenco e o objetivo de cada papel</h3>
+      <ul>
+        <li><strong>📡 Emissor (Terra):</strong> escolhe, para cada fóton, uma base (Moeda 1) e um bit (Moeda 2). É ele quem define a chave que os dois lados legítimos vão tentar compartilhar.</li>
+        <li><strong>🕵️ Espião (Hacker):</strong> intercepta cada fóton e tenta medi-lo com uma base secreta. Se acertar a base, lê o bit sem deixar rastro; se errar, provoca o colapso e precisa “chutar” um bit. O objetivo é passar despercebido (taxa de erro abaixo de 11%) e ainda adivinhar a chave.</li>
+        <li><strong>🛰️ Receptor (Satélite):</strong> mede cada fóton com uma base própria. Só os fótons em que a base dele coincide com a do Emissor entram na chave final — esse filtro é o <strong>peneiramento</strong> (sifting).</li>
+      </ul>
+      <p>Não precisa de três pessoas para testar: escolha um papel, use <strong>⚡ Preencher Restantes</strong> e depois troque de papel na tela de sincronização. Para uma dinâmica em sala, cada estudante pode representar um papel e compartilhar os tokens.</p>
+
+      <h3 id="m-fisica">2. A física por trás do jogo</h3>
+      <h4>Fóton e polarização</h4>
+      <p>Um <strong>fóton</strong> é uma partícula de luz. A <strong>polarização</strong> descreve a direção em que sua onda “vibra”. Um filtro polarizador funciona como uma fenda: ele deixa passar fótons alinhados com o filtro e bloqueia (ou altera) os demais. No BB84, usamos a polarização para representar bits.</p>
+
+      <h4>Duas bases, quatro estados</h4>
+      <p>Existem duas “famílias” de filtros, chamadas de bases. A <strong>base retilínea (+)</strong> usa as direções vertical e horizontal. A <strong>base diagonal (X)</strong> usa as direções a 45° e 135°. Cada base codifica os bits 0 e 1 de um jeito:</p>
+      <table class="manual-table">
+        <thead><tr><th>Base</th><th>Símbolo</th><th>Bit</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Retilínea (+)</strong></td><td><code>|</code></td><td>1</td><td>Vertical</td></tr>
+          <tr><td><strong>Retilínea (+)</strong></td><td><code>-</code></td><td>0</td><td>Horizontal</td></tr>
+          <tr><td><strong>Diagonal (X)</strong></td><td><code>/</code></td><td>1</td><td>Diagonal 45°</td></tr>
+          <tr><td><strong>Diagonal (X)</strong></td><td><code>\</code></td><td>0</td><td>Diagonal 135°</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Superposição, medição e colapso</h4>
+      <p>Enquanto não é medido, o fóton pode estar em uma combinação de estados (<strong>superposição</strong>). Ao medir com a base correta, o resultado é determinístico: você recupera o bit preparado. Ao medir com a base errada, a medição é aleatória e o estado original é destruído — é o <strong>colapso quântico</strong>. É por isso que tentar “espiar sem ser notado” é impossível: a base errada deixa marcas.</p>
+
+      <h4>Por que o espião não pode copiar o fóton?</h4>
+      <p>O <strong>teorema da não clonagem</strong> diz que não existe copiadora perfeita de um estado quântico desconhecido. O espião precisa medir o fóton para saber o bit, e medir já altera o estado quando a base não é a mesma. Ele pode até repassar um fóton novo, mas com informações imperfeitas — e isso gera erros que o Receptor detecta.</p>
+
+      <div class="analogy-box">
+        💡 <strong>Analogia da caixa:</strong> imagine um bilhete escrito em tinta sensível dentro de uma caixa com fechadura. Se o espião abrir com a chave certa (base correta), lê o bilhete e fecha tudo igual. Se tentar abrir com a chave errada, o bilhete se altera. No fim, Emissor e Receptor comparam algumas cópias e percebem a violação pela quantidade de erros.
+      </div>
+
+      <h3 id="m-moedas">3. As duas moedas do simulador</h3>
+      <table class="manual-table">
+        <thead><tr><th>Moeda</th><th>Cara</th><th>Coroa</th><th>O que define</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Moeda 1 — Base</strong></td><td><code>+</code> retilínea</td><td><code>X</code> diagonal</td><td>Como o fóton é preparado ou medido.</td></tr>
+          <tr><td><strong>Moeda 2 — Bit</strong></td><td><code>1</code></td><td><code>0</code></td><td>O dado transportado. No Emissor ele é escolhido; no Espião é um chute quando a base erra; no Receptor é a leitura após o colapso.</td></tr>
+        </tbody>
+      </table>
+      <p><strong>A ordem importa:</strong> a base é o “idioma” e o bit é a “mensagem”. Jogar a Moeda 2 antes de definir a base não faz sentido físico. Por isso, no simulador, cada escolha trava após o lançamento: na vida real a medição quântica também é irreversível.</p>
+      <p>Use <strong>🪙 Jogar Moeda</strong> para sortear de verdade ou clique nas opções para escolher manualmente. A moeda de ouro mostra <strong>CARA</strong> e <strong>COROA</strong>, além do valor correspondente (<code>+</code>/<code>X</code> ou <code>1</code>/<code>0</code>).</p>
+
+      <h3 id="m-rodada">4. Como jogar, passo a passo</h3>
+      <ol class="step-list">
+        <li><strong>Configuração:</strong> preencha os nomes do Emissor, do Espião e do Receptor e escolha seu papel inicial. Clique em <strong>Iniciar Simulação</strong>.</li>
+        <li><strong>Emissor:</strong> para cada um dos 10 fótons, jogue a Moeda 1 (base) e a Moeda 2 (bit). Avance com <strong>Próximo Fóton</strong>. A trilha no topo mostra o símbolo do fóton já preparado.</li>
+        <li><strong>Token do Emissor:</strong> ao terminar, copie o token gerado e envie ao Espião (ou use o mesmo navegador para trocar de papel).</li>
+        <li><strong>Espião:</strong> jogue a base secreta. Se acertar a base do Emissor, o bit é lido automaticamente. Se errar, o fóton colapsa e você precisa jogar a Moeda 2 como chute. O simulador avisa se houve acerto ou colapso.</li>
+        <li><strong>Token do Espião:</strong> ao concluir as 10 rodadas, copie o token e envie ao Receptor.</li>
+        <li><strong>Receptor:</strong> jogue sua base para cada fóton. Se coincidir com a base que chegou, lê o bit; se não, o estado colapsa e ele joga a Moeda 2 para definir a leitura. As escolhas do Espião aparecem como “chegou” e “repassado”.</li>
+        <li><strong>Relatório:</strong> ao final, veja a tabela das 10 rodadas, o peneiramento, as chaves e a taxa de erro. Compare com o limite de 11%.</li>
+      </ol>
+      <div class="manual-note"><strong>Dica de facilitação:</strong> em 10 fótons, cerca de metade das bases coincide por acaso. Com o Espião ativo, a taxa de erro esperada fica em torno de 25% nos bits mantidos — bem acima dos 11%. Sem espião, o esperado é 0%.</div>
+
+      <h3 id="m-tela">5. Entendendo a tela</h3>
+      <ul>
+        <li><strong>Trilha de fótons:</strong> 10 espaços clicáveis. Em verde, os fótons já concluídos; o destaque ciano indica o fóton atual.</li>
+        <li><strong>Arena:</strong> mostra o fóton preparado, o que chegou e o que foi repassado, com um “polarizador” central que exibe o símbolo do estado.</li>
+        <li><strong>Moedas:</strong> cada carta tem o botão de sorteio e as opções manuais. Cartões esmaecidos estão travados.</li>
+        <li><strong>Preencher Restantes:</strong> sorteia automaticamente tudo o que falta no papel atual — útil para testar rápido ou para o modo solo.</li>
+        <li><strong>Sincronização:</strong> campo para colar o token do colega e o botão para gerar o seu.</li>
+      </ul>
+
+      <h3 id="m-token">6. Sincronização por token</h3>
+      <p>O token é o estado dos 10 fótons convertido em texto com <code>Base64</code>. Ele permite continuar a partida em outro dispositivo sem servidor. Copie, envie pelo WhatsApp e cole no campo de importação da etapa seguinte.</p>
+      <div class="manual-note"><strong>Atenção:</strong> Base64 é apenas uma codificação, <strong>não é criptografia</strong>. Qualquer pessoa pode decodificá-lo. No simulador isso é intencional: o Espião precisa ver o fóton que chega. Em uma atividade real, os tokens devem circular apenas entre as etapas e nunca conter as escolhas futuras dos outros papéis.</div>
+
+      <h3 id="m-relatorio">7. O relatório e o limite de 11%</h3>
+      <ul>
+        <li><strong>Mantidos (N):</strong> fótons em que Emissor e Receptor usaram a mesma base. Só eles entram na chave.</li>
+        <li><strong>Descartados:</strong> fótons com bases diferentes; são jogados fora publicamente (peneiramento).</li>
+        <li><strong>QBER amostral:</strong> taxa de erro nos 2 primeiros bits mantidos, usados como amostra pública de verificação.</li>
+        <li><strong>Taxa global:</strong> erros em todos os bits mantidos (M/N). É uma visão mais estável do que a amostra de 2 bits.</li>
+        <li><strong>Chaves:</strong> a chave bruta do Emissor e a do Receptor devem ser iguais nos bits mantidos. A “chave secreta final” exclui os 2 bits revelados na amostra.</li>
+      </ul>
+      <p><strong>Por que 11%?</strong> Em um ataque de interceptação e reenvio, o espião erra a base em cerca de metade das vezes e, quando erra, causa erro em cerca de metade dos bits — algo próximo de 25% de erro. Protocolos reais conseguem corrigir erros e amplificar a privacidade até um limite de segurança em torno de 11%. Acima disso, a chave é considerada comprometida e deve ser descartada.</p>
+      <div class="manual-note"><strong>Honestidade estatística:</strong> com apenas 2 bits de amostra, o QBER é uma indicação didática, não uma prova. Um resultado 0% em 2 bits não garante ausência de espião; por isso o relatório também mostra a taxa global.</div>
+
+      <h3 id="m-limites">8. O que o simulador simplifica</h3>
+      <ul>
+        <li>Não há ruído no canal: sem espião, a taxa de erro é 0%.</li>
+        <li>O Espião intercepta todos os fótons e sempre repassa um estado — não há ataques parciais ou seletivos.</li>
+        <li>A amostra pública tem só 2 bits; protocolos reais usam frações maiores e análise estatística.</li>
+        <li>Não há correção de erro, amplificação de privacidade nem autenticação do canal clássico.</li>
+        <li>O token é Base64, não criptografia; a sincronização é um atalho de sala de aula.</li>
+        <li>São 10 fótons para caber em uma aula; uma chave real usaria milhares.</li>
+      </ul>
+
+      <h3 id="m-glossario">9. Glossário rápido</h3>
+      <ul>
+        <li><strong>Fóton:</strong> quantum de luz, a menor “porção” de energia luminosa.</li>
+        <li><strong>Polarização:</strong> orientação da oscilação da luz; usada para codificar bits.</li>
+        <li><strong>Base:</strong> par de direções usado para preparar ou medir (retilínea ou diagonal).</li>
+        <li><strong>Bit:</strong> unidade de informação 0 ou 1.</li>
+        <li><strong>Superposição:</strong> estado quântico que combina possibilidades antes da medição.</li>
+        <li><strong>Colapso:</strong> mudança irreversível do estado ao ser medido.</li>
+        <li><strong>Não clonagem:</strong> impossibilidade de copiar perfeitamente um estado quântico desconhecido.</li>
+        <li><strong>Peneiramento (sifting):</strong> seleção dos bits em que as bases coincidiram.</li>
+        <li><strong>QBER:</strong> taxa de erro quântica, isto é, fração de bits mantidos que divergem.</li>
+        <li><strong>Chave:</strong> sequência de bits compartilhada e usada para cifrar mensagens.</li>
+      </ul>
+
+      <h3>10. Créditos</h3>
+      <p><strong>bb84-quantum-lab</strong> integra o <strong>Projeto Córtex — Curso 2: Princípios da Física Quântica</strong>. Formadora: Dra. Judite; mentora: Dra. Viridiana Alves de Lara. Simulador didático de código aberto para explorar o protocolo BB84.</p>
+
+      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="toggleHelp(false)">Entendido, fechar manual ➔</button>
     </div>
   </div>
 
   <div class="topbar">
-    <div class="brand"><span></span> BB84 &bull; Simulador Quântico</div>
+    <div class="brand"><span></span> BB84 &bull; Laboratório Quântico</div>
     <div style="display:flex; align-items:center; gap:8px;">
-      <button class="btn-help" onclick="toggleHelp(true)">📖 Manual Tecnológico</button>
+      <button class="btn-help" onclick="toggleHelp(true)">📖 Manual de Instruções</button>
       <div style="font-size:0.75rem; color:var(--muted);" id="topRoleLabel">Configuração</div>
     </div>
   </div>
@@ -236,6 +445,26 @@
   const toBt = c => c === 'Cara' ? 1 : 0;
   const sym = (b, bit) => (b === '+' ? (bit === 1 ? '|' : '-') : (bit === 1 ? '/' : '\\'));
 
+  const COIN_FACES = { C1: { front: '+', back: 'X' }, C2: { front: '1', back: '0' } };
+
+  function coinMarkup(field, value) {
+    const faces = COIN_FACES[field.slice(-2)] || COIN_FACES.C1;
+    const showBack = value === 'Coroa' ? 'show-back' : '';
+    const face = (name, symbol, cls) => `
+      <div class="coin-face ${cls}">
+        <span class="coin-word">${name}</span>
+        <span class="coin-symbol">${symbol}</span>
+        <span class="coin-stars">✦ ✦ ✦</span>
+      </div>`;
+    return `
+      <div class="coin-scene">
+        <div class="coin3d ${showBack}" id="coin-${field}" aria-hidden="true">
+          ${face('CARA', faces.front, 'coin-front')}
+          ${face('COROA', faces.back, 'coin-back')}
+        </div>
+      </div>`;
+  }
+
   function evalPhoton(p) {
     const eB = p.eC1 ? toB(p.eC1) : null;
     const eBit = p.eC2 ? toBt(p.eC2) : null;
@@ -262,8 +491,8 @@
 
     if (state.screen === 'setup') {
       stage.innerHTML = `
-        <h1>Simulador BB84 &bull; Projeto Córtex</h1>
-        <p class="sub">Defina os nomes do trio e o seu papel inicial. Consulte o <strong>Manual Tecnológico</strong> acima para compreender os conceitos físicos da dinâmica.</p>
+        <h1>Laboratório BB84 &bull; Projeto Córtex</h1>
+        <p class="sub">Defina os nomes do trio e o seu papel inicial. Consulte o <strong>Manual de Instruções</strong> acima para entender a missão, a física e cada etapa do jogo.</p>
 
         <div class="setup-grid">
           <div class="field-group"><label>📡 Emissor (Terra)</label><input type="text" id="ne" value="${state.players.emissor}" /></div>
@@ -387,6 +616,8 @@
         </div>`;
     }
 
+    let arena = '';
+
     if (state.role === 'emissor') {
       const lockedC1 = p.eC1 !== null;
       const lockedC2 = p.eC2 !== null;
@@ -401,6 +632,7 @@
         <div class="coins-area">
           <div class="coin-card ${lockedC1 ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 1: Base</span> <span>${p.eC1 || ''}</span></div>
+            ${coinMarkup('eC1', p.eC1)}
             <div class="choice-row">
               <button class="btn-choice ${p.eC1==='Cara'?'selected':''}" onclick="pick('eC1','Cara')">Cara (+) <small>Retilínea</small></button>
               <button class="btn-choice ${p.eC1==='Coroa'?'selected':''}" onclick="pick('eC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
@@ -410,6 +642,7 @@
           </div>
           <div class="coin-card ${lockedC2 ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 2: Bit</span> <span>${p.eC2 || ''}</span></div>
+            ${coinMarkup('eC2', p.eC2)}
             <div class="choice-row">
               <button class="btn-choice ${p.eC2==='Cara'?'selected':''}" onclick="pick('eC2','Cara')">Cara (1) <small>Bit 1</small></button>
               <button class="btn-choice ${p.eC2==='Coroa'?'selected':''}" onclick="pick('eC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
@@ -435,6 +668,7 @@
         <div class="coins-area">
           <div class="coin-card ${lockedC1 ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 1: Base do Espião</span> <span>${p.sC1 || ''}</span></div>
+            ${coinMarkup('sC1', p.sC1)}
             <div class="choice-row">
               <button class="btn-choice ${p.sC1==='Cara'?'selected':''}" onclick="pick('sC1','Cara')">Cara (+) <small>Retilínea</small></button>
               <button class="btn-choice ${p.sC1==='Coroa'?'selected':''}" onclick="pick('sC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
@@ -444,6 +678,7 @@
           </div>
           <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 2: Chute (Colapso)</span> <span>${p.sC2 !== null ? p.sC2 : (info.sMatch ? 'Dispensada' : '')}</span></div>
+            ${coinMarkup('sC2', p.sC2)}
             <div class="choice-row">
               <button class="btn-choice ${p.sC2==='Cara'?'selected':''}" onclick="pick('sC2','Cara')">Cara (1) <small>Chutar 1</small></button>
               <button class="btn-choice ${p.sC2==='Coroa'?'selected':''}" onclick="pick('sC2','Coroa')">Coroa (0) <small>Chutar 0</small></button>
@@ -474,6 +709,7 @@
         <div class="coins-area">
           <div class="coin-card ${lockedC1 ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 1: Base do Satélite</span> <span>${p.rC1 || ''}</span></div>
+            ${coinMarkup('rC1', p.rC1)}
             <div class="choice-row">
               <button class="btn-choice ${p.rC1==='Cara'?'selected':''}" onclick="pick('rC1','Cara')">Cara (+) <small>Retilínea</small></button>
               <button class="btn-choice ${p.rC1==='Coroa'?'selected':''}" onclick="pick('rC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
@@ -483,6 +719,7 @@
           </div>
           <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
             <div class="coin-label"><span>Moeda 2: Leitura por Colapso</span> <span>${p.rC2 !== null ? p.rC2 : (info.rMatch ? 'Dispensada' : '')}</span></div>
+            ${coinMarkup('rC2', p.rC2)}
             <div class="choice-row">
               <button class="btn-choice ${p.rC2==='Cara'?'selected':''}" onclick="pick('rC2','Cara')">Cara (1) <small>Bit 1</small></button>
               <button class="btn-choice ${p.rC2==='Coroa'?'selected':''}" onclick="pick('rC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
@@ -554,13 +791,19 @@
     const p = state.photons[state.currentIdx];
     if (p[field] !== null) return;
 
-    btnEl.classList.add('spinning');
-    btnEl.innerText = '🪙 Sorteando...';
+    const result = Math.random() < 0.5 ? 'Cara' : 'Coroa';
+    const coin = document.getElementById('coin-' + field);
+    if (coin) coin.classList.add(result === 'Cara' ? 'spin-front' : 'spin-back');
+    const card = btnEl.closest('.coin-card');
+    if (card) card.classList.add('spinning-card');
+
+    btnEl.disabled = true;
+    btnEl.innerText = '🪙 Girando...';
 
     setTimeout(() => {
-      p[field] = Math.random() < 0.5 ? 'Cara' : 'Coroa';
+      p[field] = result;
       render();
-    }, 500);
+    }, 1520);
   }
 
   function copyTokenField(inputId, btnEl) {
