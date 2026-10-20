@@ -4,9 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BB84 &bull; Laboratório Quântico do Satélite</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('bb84-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #070b14;
+      --bg-top: #0f172a;
       --surface: #0f172a;
       --surface-card: #1e293b;
       --border: #334155;
@@ -17,12 +29,51 @@
       --rose: #fb7185;
       --amber: #fbbf24;
       --indigo: #818cf8;
+      --on-accent: #070b14;
+      --line-soft: rgba(255,255,255,0.06);
+      --surface-glass: rgba(255,255,255,0.015);
+      --accent-soft: rgba(34,211,238,0.10);
+      --accent-soft-strong: rgba(34,211,238,0.22);
+      --accent-border: rgba(34,211,238,0.25);
+      --briefing-top: rgba(34,211,238,0.05);
+      --briefing-end: rgba(15,23,42,0.2);
+      --shadow-stage: 0 20px 40px rgba(0,0,0,0.5);
+      --shadow-modal: 0 25px 60px rgba(0,0,0,0.9);
+      --overlay-bg: rgba(0,0,0,0.8);
+      color-scheme: dark;
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef3f9;
+      --bg-top: #ffffff;
+      --surface: #ffffff;
+      --surface-card: #edf2f8;
+      --border: #b8c6d6;
+      --text: #0f172a;
+      --muted: #475569;
+      --cyan: #0e7490;
+      --emerald: #047857;
+      --rose: #be123c;
+      --amber: #92400e;
+      --indigo: #4338ca;
+      --on-accent: #ffffff;
+      --line-soft: rgba(15,23,42,0.08);
+      --surface-glass: rgba(15,23,42,0.025);
+      --accent-soft: rgba(14,116,144,0.09);
+      --accent-soft-strong: rgba(14,116,144,0.16);
+      --accent-border: rgba(14,116,144,0.32);
+      --briefing-top: rgba(14,116,144,0.05);
+      --briefing-end: rgba(255,255,255,0.65);
+      --shadow-stage: 0 20px 40px rgba(15,23,42,0.12);
+      --shadow-modal: 0 25px 60px rgba(15,23,42,0.25);
+      --overlay-bg: rgba(15,23,42,0.45);
+      color-scheme: light;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
 
     body {
-      background: radial-gradient(circle at top, #0f172a 0%, #070b14 100%);
+      background: radial-gradient(circle at top, var(--bg-top) 0%, var(--bg) 100%);
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -33,20 +84,221 @@
 
     .topbar {
       width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft);
     }
     .brand { font-weight: 700; font-size: 0.9rem; color: var(--cyan); display: flex; align-items: center; gap: 8px; }
     .brand span { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; box-shadow: 0 0 10px var(--cyan); }
     
     .btn-help {
-      background: rgba(34,211,238,0.1); border: 1px solid var(--cyan); color: var(--cyan);
+      background: var(--accent-soft); border: 1px solid var(--cyan); color: var(--cyan);
       padding: 5px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
     }
-    .btn-help:hover { background: rgba(34,211,238,0.25); }
+    .btn-help:hover { background: var(--accent-soft-strong); }
+
+    .btn-home, .btn-theme {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      padding: 5px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-home:hover, .btn-theme:hover { color: var(--text); border-color: var(--text); }
+    .help-short { display: none; }
+
+    /* Apresentação editorial */
+    .landing { text-align: left; padding: 4px 0 0; }
+    .landing-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 28px; align-items: start; }
+    @media(max-width: 760px) { .landing-grid { grid-template-columns: 1fr; gap: 18px; } }
+    .landing-kicker {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 0.64rem; font-weight: 800;
+      letter-spacing: 0.13em; text-transform: uppercase; color: var(--cyan); margin-bottom: 14px;
+    }
+    .landing-kicker::before { content: ''; width: 18px; height: 1px; background: var(--cyan); }
+    .landing-title {
+      font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+      font-size: clamp(2rem, 5.5vw, 2.9rem); line-height: 1.05; letter-spacing: -0.025em;
+      font-weight: 700; margin-bottom: 14px;
+    }
+    .landing-title em { font-style: italic; color: var(--cyan); }
+    .landing-lead { color: var(--text); font-size: 0.94rem; line-height: 1.65; margin-bottom: 10px; }
+    .landing-story { color: var(--muted); font-size: 0.84rem; line-height: 1.65; margin-bottom: 18px; }
+    .landing-story strong { color: var(--text); }
+    .landing-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .landing-foot { font-size: 0.7rem; color: var(--muted); margin-top: 14px; }
+    .briefing {
+      background: linear-gradient(180deg, var(--briefing-top), var(--briefing-end));
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+    }
+    .briefing-label {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .briefing-route {
+      display: flex; align-items: center; gap: 8px; font-size: 0.64rem; font-weight: 800;
+      letter-spacing: 0.05em; color: var(--cyan); margin-bottom: 8px; flex-wrap: wrap;
+    }
+    .briefing-route i { color: var(--muted); font-style: normal; }
+    .briefing-route span:last-child { color: var(--emerald); }
+    .briefing-text { font-size: 0.76rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .briefing-team { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+    .briefing-team li { display: flex; flex-direction: column; gap: 1px; padding-bottom: 7px; border-bottom: 1px solid var(--line-soft); }
+    .briefing-team li:last-child { border-bottom: none; padding-bottom: 0; }
+    .briefing-team strong { font-size: 0.76rem; color: var(--text); }
+    .briefing-team span { font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
+    .briefing-goal { background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.22); border-radius: 8px; padding: 8px 10px; }
+    .briefing-goal strong { display: block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--emerald); margin-bottom: 2px; }
+    .briefing-goal span { font-size: 0.7rem; color: var(--muted); line-height: 1.45; }
+    .story-strip {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px;
+      padding-top: 18px; border-top: 1px solid var(--border);
+    }
+    @media(max-width: 640px) { .story-strip { grid-template-columns: 1fr; gap: 12px; } }
+    .story-strip div { border-left: 2px solid var(--accent-border); padding-left: 10px; }
+    .story-strip span { display: block; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); margin-bottom: 3px; }
+    .story-strip p { font-size: 0.74rem; color: var(--muted); line-height: 1.5; }
+
+    /* Preparação da missão */
+    .onboard-head { margin-bottom: 18px; }
+    .onboard-title {
+      font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+      font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.15; margin-bottom: 4px;
+    }
+    .onboard-field { margin-bottom: 16px; }
+    .onboard-field label {
+      display: block; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+    }
+    .onboard-field input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+      padding: 11px 13px; color: var(--text); font-size: 0.95rem; font-weight: 600; outline: none; font-family: inherit;
+    }
+    .onboard-field input:focus { border-color: var(--cyan); }
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    @media(max-width: 640px) { .role-grid { grid-template-columns: 1fr; } }
+    .role-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
+      color: var(--text); font-family: inherit; transition: all 0.18s; position: relative; overflow: hidden;
+    }
+    .role-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+    .role-card.selected {
+      border-color: var(--cyan); background: var(--accent-soft);
+      box-shadow: 0 0 0 1px var(--accent-border), 0 10px 24px var(--accent-soft);
+    }
+    .role-icon { font-size: 1.6rem; line-height: 1.2; }
+    .role-name { font-size: 0.92rem; font-weight: 800; }
+    .role-place { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cyan); font-weight: 700; }
+    .role-desc { font-size: 0.7rem; color: var(--muted); line-height: 1.4; margin-top: 4px; min-height: 40px; }
+    .role-check {
+      font-size: 0.65rem; font-weight: 800; color: var(--muted); margin-top: 6px;
+      border-top: 1px solid var(--border); width: 100%; padding-top: 6px;
+    }
+    .role-card.selected .role-check { color: var(--emerald); }
+    .mission-preview {
+      background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+      border-radius: 10px; padding: 12px 14px; margin: 14px 0;
+    }
+    .mission-preview strong {
+      display: block; color: var(--cyan); font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 3px;
+    }
+    .mission-preview p { font-size: 0.81rem; color: var(--muted); line-height: 1.5; }
+    .mission-preview p strong { display: inline; color: var(--text); font-size: inherit; text-transform: none; letter-spacing: 0; }
+    .home-config {
+      margin: 14px 0 0; text-align: left; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0 12px;
+    }
+    .home-config summary {
+      cursor: pointer; font-size: 0.76rem; font-weight: 700; color: var(--muted); padding: 10px 0; list-style: none;
+    }
+    .home-config summary::-webkit-details-marker { display: none; }
+    .home-config summary::before { content: '+ '; color: var(--cyan); }
+    .home-config[open] summary::before { content: '− '; }
+    .home-config .setup-grid { margin: 0 0 10px; }
+    .onboard-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .onboard-actions .right { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-start { padding: 12px 26px; font-size: 0.95rem; }
+    .link-back, .link-wiki {
+      background: none; border: none; color: var(--muted); font-family: inherit;
+      font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 4px 0;
+    }
+    .link-back:hover, .link-wiki:hover { color: var(--cyan); }
+    .wiki-link { color: var(--cyan); font-weight: 700; }
+    .history-link-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+    .handoff-box {
+      background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 10px;
+      padding: 12px 14px; margin: 14px 0;
+    }
+    .handoff-box > strong {
+      display: block; color: var(--cyan); font-size: 0.68rem; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 5px;
+    }
+    .handoff-box p { font-size: 0.81rem; color: var(--text); line-height: 1.55; margin-bottom: 6px; }
+    .handoff-box p:last-child { margin-bottom: 0; }
+    .handoff-box .handoff-warn { color: var(--amber); font-weight: 600; }
+
+    @media(max-width: 600px) {
+      .help-full { display: none; }
+      .help-short { display: inline; }
+      .topbar > div:last-child { flex-wrap: wrap; justify-content: flex-end; }
+    }
+    @media(max-width: 520px) {
+      .brand { font-size: 0.78rem; gap: 6px; }
+      .btn-help, .btn-home, .btn-theme { padding: 4px 9px; font-size: 0.7rem; }
+      #themeLabel { display: none; }
+      .stage { padding: 18px 15px; }
+      .modal-card { padding: 20px 16px; }
+      .landing-title { font-size: clamp(1.75rem, 8.6vw, 2.3rem); }
+      .sync-row { flex-direction: column; }
+      .sync-row .btn-copy-token { padding: 9px 14px; }
+      .onboard-actions .right { width: 100%; }
+      .onboard-actions .right .btn-primary { width: 100%; }
+    }
+
+    /* Guia narrativo estilo RPG */
+    .mission-guide {
+      display: flex; gap: 12px; align-items: flex-start; text-align: left;
+      background: var(--accent-soft); border: 1px solid var(--accent-border);
+      border-left: 3px solid var(--cyan); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .mission-guide.tone-success { background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.3); border-left-color: var(--emerald); }
+    .mission-guide.tone-warning { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3); border-left-color: var(--amber); }
+    .mission-guide.tone-danger { background: rgba(251,113,133,0.06); border-color: rgba(251,113,133,0.3); border-left-color: var(--rose); }
+    .guide-avatar {
+      flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; background: var(--surface-card); border: 1px solid var(--border);
+    }
+    .mission-guide.tone-success .guide-avatar { border-color: rgba(52,211,153,0.5); }
+    .mission-guide.tone-warning .guide-avatar { border-color: rgba(251,191,36,0.5); }
+    .mission-guide.tone-danger .guide-avatar { border-color: rgba(251,113,133,0.5); }
+    .guide-body { flex: 1; min-width: 0; }
+    .guide-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .guide-title { font-size: 0.78rem; font-weight: 800; color: var(--text); }
+    .guide-step {
+      font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); border: 1px solid var(--border); border-radius: 99px; padding: 2px 8px;
+    }
+    .guide-text { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin-top: 3px !important; }
+    .guide-text strong { color: var(--text); }
+    .roll-result {
+      margin-top: 8px; padding: 7px 10px; border-radius: 7px; font-size: 0.76rem; font-weight: 600;
+      color: var(--text); background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35);
+      animation: rollPop 0.35s ease-out;
+    }
+    .roll-result strong { color: var(--amber); }
+    .coin-result {
+      margin: -4px 0 8px; padding: 6px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
+      text-align: center; color: var(--amber); background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.3); animation: rollPop 0.3s ease-out;
+    }
+    .coin-result strong { color: var(--text); }
+    @media(max-width: 600px) { #topRoleLabel { display: none; } }
+    @keyframes rollPop {
+      0% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     .stage {
       width: 100%; max-width: 800px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative;
+      border-radius: 16px; padding: 24px; box-shadow: var(--shadow-stage); position: relative;
     }
 
     h1 { font-size: 1.35rem; font-weight: 800; margin-bottom: 4px; }
@@ -54,12 +306,12 @@
 
     /* Modal de Manual / Ajuda Aprimorado */
     .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg);
       backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px;
     }
     .modal-card {
       background: var(--surface); border: 1px solid var(--cyan); border-radius: 16px; width: 100%; max-width: 720px;
-      padding: 28px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); max-height: 90vh; overflow-y: auto;
+      padding: 28px; box-shadow: var(--shadow-modal); max-height: 90vh; overflow-y: auto;
     }
     .modal-card h2 { color: var(--cyan); font-size: 1.25rem; margin-bottom: 8px; }
     .modal-card h3 { color: var(--amber); font-size: 0.98rem; margin-top: 18px; margin-bottom: 6px; }
@@ -68,11 +320,11 @@
     .modal-card ul, .modal-card ol { padding-left: 18px; margin-bottom: 8px; }
     .modal-card strong { color: var(--text); }
     .modal-card code {
-      background: rgba(34,211,238,0.1); color: var(--cyan); padding: 1px 5px; border-radius: 4px;
+      background: var(--accent-soft); color: var(--cyan); padding: 1px 5px; border-radius: 4px;
       font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.8em;
     }
     .analogy-box {
-      background: rgba(34,211,238,0.06); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+      background: var(--accent-soft); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
     }
     .manual-lead { font-size: 0.9rem !important; color: var(--text) !important; }
     .manual-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
@@ -86,7 +338,7 @@
     .step-list li::before {
       counter-increment: step; content: counter(step);
       position: absolute; left: 0; top: 1px; width: 19px; height: 19px; border-radius: 50%;
-      background: rgba(34,211,238,0.14); border: 1px solid var(--cyan); color: var(--cyan);
+      background: var(--accent-soft-strong); border: 1px solid var(--cyan); color: var(--cyan);
       font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
     }
     .manual-table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 0.78rem; }
@@ -95,7 +347,7 @@
     .manual-table td strong { color: var(--cyan); }
     .manual-note {
       background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.28); border-radius: 8px;
-      padding: 9px 12px; margin: 10px 0; font-size: 0.8rem; color: #fcd34d;
+      padding: 9px 12px; margin: 10px 0; font-size: 0.8rem; color: var(--amber);
     }
     .manual-note strong { color: var(--amber); }
 
@@ -123,8 +375,21 @@
 
     .laser-view {
       display: flex; align-items: center; justify-content: center; gap: 14px;
-      background: rgba(255,255,255,0.015); border: 1px dashed var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px;
+      background: var(--surface-glass); border: 1px dashed var(--border); border-radius: 10px;
+      padding: 14px; margin-bottom: 16px; position: relative; overflow: hidden;
     }
+    .photon-beam {
+      position: absolute; top: 50%; left: -4%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 10px 3px rgba(34,211,238,0.55);
+      animation: beamTravel 2.4s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes beamTravel {
+      0% { left: -4%; opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { left: 104%; opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .photon-beam { display: none; } }
     .polarizer-icon {
       width: 54px; height: 54px; border-radius: 50%; background: var(--surface-card); border: 2px solid var(--cyan);
       display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: var(--cyan);
@@ -145,7 +410,9 @@
     @media(max-width: 600px) { .coins-area { grid-template-columns: 1fr; } }
 
     .coin-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; position: relative; }
-    .coin-card.locked { opacity: 0.5; pointer-events: none; }
+    .coin-card.locked { pointer-events: none; }
+    .coin-card.locked > * { opacity: 0.5; }
+    .coin-card.locked > .coin-result { opacity: 1; }
     .coin-card.spinning-card { pointer-events: none; }
     .coin-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; }
 
@@ -156,10 +423,10 @@
     }
     .btn-choice small { font-size: 0.65rem; color: var(--muted); font-weight: 500; }
     .btn-choice:hover { border-color: var(--cyan); }
-    .btn-choice.selected { background: rgba(34,211,238,0.2); border-color: var(--cyan); color: #fff; }
+    .btn-choice.selected { background: var(--accent-soft-strong); border-color: var(--cyan); color: var(--text); }
 
     .btn-coin-flip {
-      width: 100%; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none; color: #fff;
+      width: 100%; background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%); border: none; color: #fff;
       padding: 9px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
       display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);
     }
@@ -240,12 +507,12 @@
     }
 
     .alert-box { margin-top: 12px; padding: 9px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
-    .alert-box.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; }
-    .alert-box.err { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: #fda4af; }
+    .alert-box.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: var(--emerald); }
+    .alert-box.err { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.3); color: var(--rose); }
 
     /* Rodapé e Sincronização com Botão Copiar Token */
     .nav-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-    .btn-primary { background: var(--cyan); color: #070b14; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; }
+    .btn-primary { background: var(--cyan); color: var(--on-accent); border: none; padding: 9px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; }
     .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(34,211,238,0.3); }
     .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
     .btn-sec { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
@@ -254,7 +521,7 @@
     .sync-box { background: var(--surface-card); border: 1px dashed var(--cyan); border-radius: 10px; padding: 14px; margin-top: 14px; font-size: 0.82rem; }
     .sync-row { display: flex; gap: 8px; margin-top: 6px; }
     .sync-box input { flex: 1; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cyan); font-family: monospace; font-size: 0.78rem; outline: none; }
-    .btn-copy-token { background: var(--cyan); color: #070b14; border: none; padding: 0 14px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+    .btn-copy-token { background: var(--cyan); color: var(--on-accent); border: none; padding: 0 14px; border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
     .btn-copy-token:hover { opacity: 0.9; }
 
     /* Relatório Responsivo */
@@ -262,7 +529,7 @@
     .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
     .metric-card .val { font-size: 1.2rem; font-weight: 800; color: var(--cyan); margin-top: 2px; }
 
-    .report-sheet { background: #fff; color: #0f172a; border-radius: 10px; padding: 20px; margin-top: 14px; font-size: 0.84rem; line-height: 1.45; }
+    .report-sheet { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-top: 14px; font-size: 0.84rem; line-height: 1.45; }
     .report-sheet h2 { font-size: 1.1rem; color: #0f172a; margin-bottom: 4px; }
     .report-sheet h3 { font-size: 0.95rem; color: #1e3a8a; margin-top: 14px; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
     .report-sheet table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.75rem; }
@@ -305,13 +572,17 @@
       <ul>
         <li><strong>📡 Emissor (Terra):</strong> escolhe, para cada fóton, uma base (Moeda 1) e um bit (Moeda 2). É ele quem define a chave que os dois lados legítimos vão tentar compartilhar.</li>
         <li><strong>🕵️ Espião (Hacker):</strong> intercepta cada fóton e tenta medi-lo com uma base secreta. Se acertar a base, lê o bit sem deixar rastro; se errar, provoca o colapso e precisa “chutar” um bit. O objetivo é passar despercebido (taxa de erro abaixo de 11%) e ainda adivinhar a chave.</li>
-        <li><strong>🛰️ Receptor (Satélite):</strong> mede cada fóton com uma base própria. Só os fótons em que a base dele coincide com a do Emissor entram na chave final — esse filtro é o <strong>peneiramento</strong> (sifting).</li>
+        <li><strong>🛰️ Receptor (Satélite):</strong> mede cada fóton com uma base própria. Só os fótons em que a base dele coincide com a do Emissor entram na chave final — esse filtro é o <strong>peneiramento</strong> (sifting). É ele quem gera o <strong>relatório final</strong> a partir das medições.</li>
       </ul>
-      <p>Não precisa de três pessoas para testar: escolha um papel, use <strong>⚡ Preencher Restantes</strong> e depois troque de papel na tela de sincronização. Para uma dinâmica em sala, cada estudante pode representar um papel e compartilhar os tokens.</p>
+      <p>A experiência completa pede <strong>três pessoas diferentes</strong>: cada uma entra no próprio dispositivo, digita o próprio nome e escolhe um papel. Também é possível testar sozinho no modo demonstração, usando <strong>⚡ Preencher Restantes</strong> e trocando de papel pela tela de recebimento — mas a lógica do Espião só ganha sentido quando outra pessoa preparou os fótons.</p>
+      <p>Quer conhecer a origem do protocolo? <button class="link-wiki" onclick="toggleHelp(false);toggleHistory(true)">Abra a história do BB84</button> ou o verbete da Wikipédia.</p>
 
       <h3 id="m-fisica">2. A física por trás do jogo</h3>
       <h4>Fóton e polarização</h4>
       <p>Um <strong>fóton</strong> é uma partícula de luz. A <strong>polarização</strong> descreve a direção em que sua onda “vibra”. Um filtro polarizador funciona como uma fenda: ele deixa passar fótons alinhados com o filtro e bloqueia (ou altera) os demais. No BB84, usamos a polarização para representar bits.</p>
+
+      <h4>O fóton é o mensageiro da informação</h4>
+      <p>Quando dizemos que o Emissor “emite um fóton”, ele não está enviando apenas luz: está enviando <strong>um dado</strong> — um bit, que vale <code>0</code> ou <code>1</code>. O fóton é o <strong>veículo</strong> da informação, a polarização é a forma como ela é escrita e a base é o “alfabeto” combinado. No simulador, cada fóton da trilha representa <strong>uma unidade de informação</strong>: com 10 fótons, existem até 10 bits brutos; depois do peneiramento, só os bits com bases coincidentes formam a chave. Se o fóton for interceptado ou colapsar, a informação que ele carregava se perde ou chega alterada.</p>
 
       <h4>Duas bases, quatro estados</h4>
       <p>Existem duas “famílias” de filtros, chamadas de bases. A <strong>base retilínea (+)</strong> usa as direções vertical e horizontal. A <strong>base diagonal (X)</strong> usa as direções a 45° e 135°. Cada base codifica os bits 0 e 1 de um jeito:</p>
@@ -348,27 +619,35 @@
 
       <h3 id="m-rodada">4. Como jogar, passo a passo</h3>
       <ol class="step-list">
-        <li><strong>Configuração:</strong> preencha os nomes do Emissor, do Espião e do Receptor e escolha seu papel inicial. Clique em <strong>Iniciar Simulação</strong>.</li>
-        <li><strong>Emissor:</strong> para cada um dos 10 fótons, jogue a Moeda 1 (base) e a Moeda 2 (bit). Avance com <strong>Próximo Fóton</strong>. A trilha no topo mostra o símbolo do fóton já preparado.</li>
-        <li><strong>Token do Emissor:</strong> ao terminar, copie o token gerado e envie ao Espião (ou use o mesmo navegador para trocar de papel).</li>
-        <li><strong>Espião:</strong> jogue a base secreta. Se acertar a base do Emissor, o bit é lido automaticamente. Se errar, o fóton colapsa e você precisa jogar a Moeda 2 como chute. O simulador avisa se houve acerto ou colapso.</li>
-        <li><strong>Token do Espião:</strong> ao concluir as 10 rodadas, copie o token e envie ao Receptor.</li>
-        <li><strong>Receptor:</strong> jogue sua base para cada fóton. Se coincidir com a base que chegou, lê o bit; se não, o estado colapsa e ele joga a Moeda 2 para definir a leitura. As escolhas do Espião aparecem como “chegou” e “repassado”.</li>
-        <li><strong>Relatório:</strong> ao final, veja a tabela das 10 rodadas, o peneiramento, as chaves e a taxa de erro. Compare com o limite de 11%.</li>
+        <li><strong>Apresentação:</strong> leia a história curta e clique em <strong>Iniciar prática</strong>. O botão <strong>Conhecer a história</strong> abre a wiki do BB84.</li>
+        <li><strong>Preparação:</strong> digite seu nome e escolha seu papel — Emissor, Espião ou Receptor. Cada integrante faz isso no próprio dispositivo. Depois clique em <strong>Começar missão</strong>.</li>
+        <li><strong>Emissor:</strong> para cada um dos 10 fótons, jogue a Moeda 1 (base) e a Moeda 2 (bit). Siga o <strong>guia da missão</strong> no topo: ele explica cada etapa e, após o giro, mostra o resultado do sorteio. Avance com <strong>Próximo Fóton</strong>. A trilha mostra o símbolo do fóton já preparado.</li>
+        <li><strong>Token do Emissor:</strong> ao terminar, o Emissor copia o token e envia para o Espião, que escolhe o papel Espião e o carrega na tela de recebimento. No modo demonstração, o mesmo dispositivo pode continuar sozinho.</li>
+        <li><strong>Espião:</strong> comece recebendo a transmissão. Depois jogue a base secreta. Se acertar a base do Emissor, o bit é lido automaticamente. Se errar, o fóton colapsa e você precisa jogar a Moeda 2 como chute. O simulador avisa se houve acerto ou colapso.</li>
+        <li><strong>Token do Espião:</strong> ao concluir as 10 rodadas, o Espião gera o token. O Receptor o recebe antes de começar a medir.</li>
+        <li><strong>Receptor:</strong> receba a transmissão e jogue sua base para cada fóton. Se coincidir com a base que chegou, lê o bit; se não, o estado colapsa e ele joga a Moeda 2 para definir a leitura. As escolhas do Espião aparecem como “chegou” e “repassado”. O Receptor <strong>não cola token durante a medição</strong>: ele recebe a transmissão, mede e gera o relatório.</li>
+        <li><strong>Relatório:</strong> ao final, o Receptor vê a tabela das 10 rodadas, o peneiramento, as chaves e a taxa de erro. Compare com o limite de 11%.</li>
       </ol>
       <div class="manual-note"><strong>Dica de facilitação:</strong> em 10 fótons, cerca de metade das bases coincide por acaso. Com o Espião ativo, a taxa de erro esperada fica em torno de 25% nos bits mantidos — bem acima dos 11%. Sem espião, o esperado é 0%.</div>
 
       <h3 id="m-tela">5. Entendendo a tela</h3>
       <ul>
+        <li><strong>Guia da missão:</strong> painel narrativo no topo que diz o que aconteceu, qual é o próximo passo e por quê. A mensagem do resultado do sorteio aparece dentro dele.</li>
         <li><strong>Trilha de fótons:</strong> 10 espaços clicáveis. Em verde, os fótons já concluídos; o destaque ciano indica o fóton atual.</li>
         <li><strong>Arena:</strong> mostra o fóton preparado, o que chegou e o que foi repassado, com um “polarizador” central que exibe o símbolo do estado.</li>
         <li><strong>Moedas:</strong> cada carta tem o botão de sorteio e as opções manuais. Cartões esmaecidos estão travados.</li>
         <li><strong>Preencher Restantes:</strong> sorteia automaticamente tudo o que falta no papel atual — útil para testar rápido ou para o modo solo.</li>
-        <li><strong>Sincronização:</strong> campo para colar o token do colega e o botão para gerar o seu.</li>
+        <li><strong>Recepção da transmissão:</strong> tela em que o Espião ou o Receptor carrega o token da etapa anterior antes de começar. Não é uma caixa de importação durante o jogo: é a porta de entrada da etapa.</li>
       </ul>
 
-      <h3 id="m-token">6. Sincronização por token</h3>
-      <p>O token é o estado dos 10 fótons convertido em texto com <code>Base64</code>. Ele permite continuar a partida em outro dispositivo sem servidor. Copie, envie pelo WhatsApp e cole no campo de importação da etapa seguinte.</p>
+      <h3 id="m-token">6. Como o token circula</h3>
+      <p>O token é o estado dos 10 fótons convertido em texto com <code>Base64</code>. Ele permite continuar a partida em outro dispositivo sem servidor. Cada etapa tem um dono claro:</p>
+      <ul>
+        <li><strong>Emissor para Espião:</strong> o Emissor prepara os fótons e gera o primeiro token. O Espião o carrega na tela de <strong>Recepção da transmissão</strong> antes de interceptar.</li>
+        <li><strong>Espião para Receptor:</strong> o Espião mede, repassa e gera o segundo token. O Receptor o carrega na tela de <strong>Recepção da transmissão</strong> antes de medir.</li>
+        <li><strong>Receptor para relatório:</strong> o Receptor não gera token nem cola código durante a medição. Ele mede os fótons recebidos e gera o <strong>relatório final</strong> com a chave e a taxa de erro.</li>
+      </ul>
+      <p>O caminho recomendado usa <strong>três pessoas e três dispositivos</strong>: quem termina uma etapa copia o token e envia para a próxima pessoa, que escolhe o papel correspondente e cola o token na tela de recebimento. No modo demonstração, use <strong>Continuar sozinho</strong> ao final de cada etapa: os dados seguem carregados e não é preciso colar token. O simulador valida o estágio do token: um token do Emissor não é aceito na entrada do Receptor, e vice-versa.</p>
       <div class="manual-note"><strong>Atenção:</strong> Base64 é apenas uma codificação, <strong>não é criptografia</strong>. Qualquer pessoa pode decodificá-lo. No simulador isso é intencional: o Espião precisa ver o fóton que chega. Em uma atividade real, os tokens devem circular apenas entre as etapas e nunca conter as escolhas futuras dos outros papéis.</div>
 
       <h3 id="m-relatorio">7. O relatório e o limite de 11%</h3>
@@ -394,7 +673,7 @@
 
       <h3 id="m-glossario">9. Glossário rápido</h3>
       <ul>
-        <li><strong>Fóton:</strong> quantum de luz, a menor “porção” de energia luminosa.</li>
+        <li><strong>Fóton:</strong> quantum de luz, a menor “porção” de energia luminosa; no BB84, é o veículo que transporta 1 bit de informação.</li>
         <li><strong>Polarização:</strong> orientação da oscilação da luz; usada para codificar bits.</li>
         <li><strong>Base:</strong> par de direções usado para preparar ou medir (retilínea ou diagonal).</li>
         <li><strong>Bit:</strong> unidade de informação 0 ou 1.</li>
@@ -404,20 +683,63 @@
         <li><strong>Peneiramento (sifting):</strong> seleção dos bits em que as bases coincidiram.</li>
         <li><strong>QBER:</strong> taxa de erro quântica, isto é, fração de bits mantidos que divergem.</li>
         <li><strong>Chave:</strong> sequência de bits compartilhada e usada para cifrar mensagens.</li>
+        <li><strong>Token:</strong> texto em Base64 que transporta o estado dos 10 fótons entre etapas. É gerado por quem conclui uma etapa e carregado por quem inicia a próxima.</li>
       </ul>
 
       <h3>10. Créditos</h3>
-      <p><strong>bb84-quantum-lab</strong> integra o <strong>Projeto Córtex — Curso 2: Princípios da Física Quântica</strong>. Formadora: Dra. Judite; mentora: Dra. Viridiana Alves de Lara. Simulador didático de código aberto para explorar o protocolo BB84.</p>
+      <p><strong>bb84-quantum-lab</strong> é um simulador didático de código aberto para explorar o protocolo BB84 em aulas de física, computação e segurança da informação.</p>
 
-      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="toggleHelp(false)">Entendido, fechar manual ➔</button>
+      <button class="btn-primary" style="width:100%; margin-top:14px;" onclick="toggleHelp(false)">Entendido, fechar manual</button>
+    </div>
+  </div>
+
+  <!-- Wiki curta: história do BB84 -->
+  <div class="modal-overlay" id="historyModal" style="display:none;">
+    <div class="modal-card">
+      <h2>BB84 &bull; A história por trás do protocolo</h2>
+      <p class="manual-lead">Antes de entrar na missão, vale conhecer a ideia que deu origem a tudo: uma conversa secreta que se protege sozinha, porque qualquer espionagem deixa marcas na própria luz.</p>
+
+      <h3>1984: uma ideia improvável</h3>
+      <p>Em 1984, o físico <strong>Charles Bennett</strong>, da IBM, e o cientista da computação <strong>Gilles Brassard</strong>, da Universidade de Montréal, apresentaram em uma conferência em Bangalore, na Índia, um protocolo para distribuir chaves secretas usando fótons. O título era técnico — <em>Quantum cryptography: Public key distribution and coin tossing</em> —, mas a proposta era ousada: usar as leis da física, e não apenas a dificuldade de cálculos, para garantir sigilo.</p>
+      <p>O nome <strong>BB84</strong> vem das iniciais dos dois autores e do ano de publicação.</p>
+
+      <h3>A ideia central</h3>
+      <p>O Emissor codifica cada bit na <strong>polarização</strong> de um fóton, escolhendo entre duas bases que não são compatíveis entre si. O Receptor mede com uma base própria. Quando as bases coincidem, o bit é lido corretamente. Quando não coincidem, o resultado é aleatório e o estado original se perde.</p>
+      <p>É aí que a física entra: um espião não consegue copiar um fóton desconhecido (teorema da não clonagem). Ele precisa medir, e medir com a base errada perturba o estado. Depois, Emissor e Receptor comparam uma amostra pública. Se houver erros demais, sabem que alguém tentou escutar.</p>
+
+      <div class="analogy-box">
+        <strong>Em uma frase:</strong> no BB84, a segurança não vem de esconder melhor a mensagem, mas de tornar impossível observá-la sem alterá-la.
+      </div>
+
+      <h3>Por que isso importa hoje</h3>
+      <p>O BB84 foi o primeiro protocolo de <strong>distribuição quântica de chaves</strong> (QKD). A ideia saiu do papel: já foi testada em fibras ópticas, em enlaces de longa distância e em satélites, como o <strong>Micius</strong>, lançado pela China em 2016. Redes quânticas experimentais e a busca por comunicação resistente a computadores quânticos mantêm o tema atual.</p>
+
+      <h3>Linha do tempo</h3>
+      <ul>
+        <li><strong>1984:</strong> Bennett e Brassard propõem o BB84.</li>
+        <li><strong>1989:</strong> primeira demonstração experimental, em uma mesa de laboratório da IBM.</li>
+        <li><strong>2016–2017:</strong> o satélite Micius demonstra distribuição quântica de chaves entre a Terra e o espaço.</li>
+        <li><strong>Hoje:</strong> QKD avança em fibras, satélites e redes metropolitanas — e segue sendo um dos melhores laboratórios para entender a física quântica na prática.</li>
+      </ul>
+
+      <h3>Quer se aprofundar?</h3>
+      <p>O verbete da Wikipédia em português traz a descrição técnica do protocolo, as etapas de peneiramento e as referências originais.</p>
+
+      <div class="history-link-row">
+        <a class="btn-primary" style="text-decoration:none; display:inline-flex; align-items:center;" href="https://pt.wikipedia.org/wiki/BB84" target="_blank" rel="noopener noreferrer">Abrir a wiki do BB84</a>
+        <button class="btn-sec" onclick="toggleHistory(false)">Voltar à apresentação</button>
+        <button class="btn-sec" onclick="toggleHistory(false);startOnboarding()">Iniciar prática</button>
+      </div>
     </div>
   </div>
 
   <div class="topbar">
     <div class="brand"><span></span> BB84 &bull; Laboratório Quântico</div>
     <div style="display:flex; align-items:center; gap:8px;">
-      <button class="btn-help" onclick="toggleHelp(true)">📖 Manual de Instruções</button>
-      <div style="font-size:0.75rem; color:var(--muted);" id="topRoleLabel">Configuração</div>
+      <button class="btn-theme" id="themeBtn" onclick="toggleTheme()" aria-label="Alternar tema" title="Alternar tema"><span id="themeIcon">☀</span> <span id="themeLabel">Tema claro</span></button>
+      <button class="btn-home" id="topHomeBtn" onclick="goHome()">Início</button>
+      <button class="btn-help" onclick="toggleHelp(true)">📖 <span class="help-full">Manual de Instruções</span><span class="help-short">Manual</span></button>
+      <div style="font-size:0.75rem; color:var(--muted);" id="topRoleLabel">Apresentação</div>
     </div>
   </div>
 
@@ -425,10 +747,15 @@
 
 <script>
   const state = {
-    screen: 'setup',
+    screen: 'home',
     currentIdx: 0,
     role: 'emissor',
-    players: { emissor: 'Irlan Pereira de Souza', espiao: 'ISA GUEDES', receptor: 'SANTANA' },
+    roleChosen: false,
+    mission: 0,
+    lastRoll: null,
+    playerName: '',
+    receiveFor: null,
+    players: { emissor: '', espiao: '', receptor: '' },
     photons: Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
       eC1: null, eC2: null,
@@ -437,8 +764,38 @@
     }))
   };
 
+  const ROLE_NAMES = { emissor: 'Emissor', espiao: 'Espião', receptor: 'Receptor' };
+  const playerLabel = role => state.players[role] || ROLE_NAMES[role];
+
+  function applyTheme(theme, persist) {
+    const chosen = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', chosen);
+    const btn = document.getElementById('themeBtn');
+    if (btn) {
+      const goingLight = chosen === 'light';
+      document.getElementById('themeIcon').textContent = goingLight ? '☾' : '☀';
+      document.getElementById('themeLabel').textContent = goingLight ? 'Tema escuro' : 'Tema claro';
+      btn.setAttribute('aria-label', goingLight ? 'Ativar tema escuro' : 'Ativar tema claro');
+      btn.setAttribute('title', goingLight ? 'Ativar tema escuro' : 'Ativar tema claro');
+    }
+    if (persist) {
+      try { localStorage.setItem('bb84-theme', chosen); } catch (e) {}
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light', true);
+  }
+
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+
   function toggleHelp(show) {
     document.getElementById('helpModal').style.display = show ? 'flex' : 'none';
+  }
+
+  function toggleHistory(show) {
+    document.getElementById('historyModal').style.display = show ? 'flex' : 'none';
   }
 
   const toB = c => c === 'Cara' ? '+' : 'X';
@@ -465,6 +822,120 @@
       </div>`;
   }
 
+  function cleanName(value) {
+    return String(value || '').replace(/[<>"]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  }
+
+  function capturePlayers() {
+    const map = { ne: 'emissor', ns: 'espiao', nr: 'receptor' };
+    Object.keys(map).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && cleanName(el.value)) state.players[map[id]] = cleanName(el.value);
+    });
+    const nameEl = document.getElementById('playerName');
+    if (nameEl) state.playerName = cleanName(nameEl.value);
+  }
+
+  function makeToken() {
+    return btoa(JSON.stringify({ v: 2, players: state.players, photons: state.photons }));
+  }
+
+  function startOnboarding() {
+    capturePlayers();
+    state.screen = 'onboarding';
+    state.lastRoll = null;
+    render();
+  }
+
+  function selectRole(role) {
+    capturePlayers();
+    state.role = role;
+    state.roleChosen = true;
+    state.lastRoll = null;
+    render();
+  }
+
+  function goHome() {
+    capturePlayers();
+    state.screen = 'home';
+    state.lastRoll = null;
+    render();
+  }
+
+  function setRoll(field, result, source) {
+    const isBase = field.endsWith('C1');
+    const meaning = isBase
+      ? (result === 'Cara' ? 'base retilínea (+)' : 'base diagonal (X)')
+      : (result === 'Cara' ? 'bit 1' : 'bit 0');
+    const coinName = isBase ? 'Moeda 1' : 'Moeda 2';
+    const verb = source === 'manual' ? 'foi definida como' : 'caiu em';
+    state.lastRoll = {
+      idx: state.currentIdx,
+      role: state.role,
+      field,
+      result,
+      text: `${coinName} ${verb} <strong>${result.toUpperCase()}</strong> → ${meaning}.`
+    };
+  }
+
+  function rollNote(field, roll) {
+    return roll && roll.field === field ? `<div class="coin-result">🎲 ${roll.text}</div>` : '';
+  }
+
+  function missionBrief(role, p, info, idx) {
+    const n = idx + 1;
+    if (role === 'emissor') {
+      if (!p.eC1) return {
+        icon: '📡', title: 'Preparar o fóton', step: 'Etapa 1 de 2', tone: 'info',
+        text: `Jogue a <strong>Moeda 1</strong> para escolher a base do fóton #${n}. A base é o “idioma” da informação: ela define se o bit será escrito em <strong>+</strong> (retilínea) ou <strong>X</strong> (diagonal).`
+      };
+      if (!p.eC2) return {
+        icon: '📡', title: 'Escolher a informação', step: 'Etapa 2 de 2', tone: 'info',
+        text: `Base definida: <strong>${info.eB}</strong>. Agora jogue a <strong>Moeda 2</strong> para escolher o bit que este fóton vai transportar: <strong>1</strong> ou <strong>0</strong>.`
+      };
+      return {
+        icon: '✅', title: 'Fóton pronto para envio', step: 'Etapa concluída', tone: 'success',
+        text: `Fóton #${n} preparado com base <strong>${info.eB}</strong> e bit <strong>${info.eBit}</strong> (estado <strong>${info.eSym}</strong>). Este fóton carrega <strong>1 bit de informação</strong> até o satélite. Avance para o próximo.`
+      };
+    }
+
+    if (role === 'espiao') {
+      if (!p.sC1) return {
+        icon: '🕵️', title: 'Interceptar o fóton', step: 'Etapa 1 de 2', tone: 'info',
+        text: `Um fóton do Emissor chegou. Jogue a <strong>Moeda 1</strong> para escolher sua base de medição. Se acertar a base original, você lê o bit sem alterar o estado.`
+      };
+      if (!info.sMatch && p.sC2 === null) return {
+        icon: '⚡', title: 'Colapso quântico!', step: 'Etapa 2 de 2', tone: 'danger',
+        text: `Sua base (<strong>${info.sB}</strong>) é diferente da usada pelo Emissor. O estado original foi destruído e o bit virou incerteza. Jogue a <strong>Moeda 2</strong> para sortear o bit que você vai repassar — este é o rastro que pode te denunciar.`
+      };
+      if (info.sMatch) return {
+        icon: '🔓', title: 'Base correta, sem rastro', step: 'Etapa concluída', tone: 'success',
+        text: `Você usou a mesma base do Emissor (<strong>${info.sB}</strong>) e leu o bit <strong>${info.eBit}</strong> sem colapsar o fóton. Repasse-o ao satélite: para o Receptor, ele parece intacto.`
+      };
+      return {
+        icon: '⚠️', title: 'Fóton adulterado', step: 'Etapa concluída', tone: 'warning',
+        text: `Você repassou o fóton com base <strong>${info.sB}</strong> e bit <strong>${info.sBit}</strong>. Se essa adulteração coincidir com a base do Receptor, ela aparece como erro no relatório.`
+      };
+    }
+
+    if (!p.rC1) return {
+      icon: '🛰️', title: 'Medir o fóton recebido', step: 'Etapa 1 de 2', tone: 'info',
+      text: `O fóton #${n} chegou ao satélite. Jogue a <strong>Moeda 1</strong> para escolher sua base de medição. Você não sabe qual base o Emissor usou — essa é a essência da segurança.`
+    };
+    if (!info.rMatch && p.rC2 === null) return {
+      icon: '⚡', title: 'Base incompatível', step: 'Etapa 2 de 2', tone: 'warning',
+      text: `Sua base (<strong>${info.rB}</strong>) não coincide com a do Emissor. O fóton colapsou e o bit não pode ser lido diretamente. Jogue a <strong>Moeda 2</strong> para registrar a leitura.`
+    };
+    if (info.rMatch) return {
+      icon: '🔑', title: 'Bit recebido', step: 'Etapa concluída', tone: 'success',
+      text: `Base compatível (<strong>${info.rB}</strong>)! O bit <strong>${info.rBit}</strong> foi lido diretamente. Se este fóton sobreviver ao peneiramento, ele entra na chave final.`
+    };
+    return {
+      icon: '📥', title: 'Leitura registrada', step: 'Etapa concluída', tone: 'info',
+      text: `Leitura por colapso concluída: bit <strong>${info.rBit}</strong>. Só os fótons em que sua base coincide com a do Emissor entram na chave — os outros serão descartados.`
+    };
+  }
+
   function evalPhoton(p) {
     const eB = p.eC1 ? toB(p.eC1) : null;
     const eBit = p.eC2 ? toBt(p.eC2) : null;
@@ -487,70 +958,206 @@
 
   function render() {
     const stage = document.getElementById('mainStage');
-    document.getElementById('topRoleLabel').innerText = `Papel: ${state.role.toUpperCase()}`;
+    const homeBtn = document.getElementById('topHomeBtn');
+    if (homeBtn) homeBtn.style.display = state.screen === 'home' ? 'none' : 'inline-block';
+    const screenLabels = { home: 'Apresentação', onboarding: 'Preparação', receive: 'Recepção da transmissão' };
+    document.getElementById('topRoleLabel').innerText = screenLabels[state.screen] || `Papel: ${state.role.toUpperCase()}`;
 
-    if (state.screen === 'setup') {
+    if (state.screen === 'home') {
       stage.innerHTML = `
-        <h1>Laboratório BB84 &bull; Projeto Córtex</h1>
-        <p class="sub">Defina os nomes do trio e o seu papel inicial. Consulte o <strong>Manual de Instruções</strong> acima para entender a missão, a física e cada etapa do jogo.</p>
+        <section class="landing">
+          <div class="landing-grid">
+            <div>
+              <div class="landing-kicker">bb84-quantum-lab</div>
+              <h1 class="landing-title">Teste a segurança <em>quântica</em> na prática.</h1>
+              <p class="landing-lead">
+                Bem-vindo ao <strong>bb84-quantum-lab</strong>. Aqui você entra em uma missão de criptografia quântica:
+                três pessoas, dez fótons e uma pergunta — é possível compartilhar uma chave secreta sem que ninguém
+                consiga escutar em silêncio?
+              </p>
+              <p class="landing-story">
+                Em <strong>1984</strong>, Charles Bennett e Gilles Brassard propuseram o protocolo <strong>BB84</strong>:
+                codificar a informação na polarização de fótons, de um jeito que qualquer tentativa de espionagem
+                deixa erros na transmissão. Quatro décadas depois, a ideia virou satélites, fibras ópticas e
+                laboratórios ao redor do mundo. Nesta prática, você assume um dos papéis e vê a física acontecer.
+              </p>
+              <div class="landing-actions">
+                <button class="btn-primary btn-start" onclick="startOnboarding()">Iniciar prática</button>
+                <button class="btn-sec" onclick="toggleHistory(true)">Conhecer a história</button>
+              </div>
+              <p class="landing-foot">Reúna três pessoas — uma para cada papel — ou explore sozinho em modo demonstração.</p>
+            </div>
 
-        <div class="setup-grid">
-          <div class="field-group"><label>📡 Emissor (Terra)</label><input type="text" id="ne" value="${state.players.emissor}" /></div>
-          <div class="field-group"><label>🕵️ Espião (Hacker)</label><input type="text" id="ns" value="${state.players.espiao}" /></div>
-          <div class="field-group"><label>🛰️ Receptor (Satélite)</label><input type="text" id="nr" value="${state.players.receptor}" /></div>
-          <div class="field-group">
-            <label>👤 Seu Papel</label>
-            <select id="selRole">
-              <option value="emissor">Emissor (Antártica)</option>
-              <option value="espiao">Espião (Hacker)</option>
-              <option value="receptor">Receptor (Satélite)</option>
-            </select>
+            <aside class="briefing">
+              <div class="briefing-label">Briefing da missão</div>
+              <div class="briefing-route"><span>ESTAÇÃO ANTÁRTICA</span><i>&rarr;</i><span>SATÉLITE</span></div>
+              <p class="briefing-text">
+                Três pessoas tentam compartilhar uma chave secreta enquanto uma delas, o espião, intercepta a
+                transmissão. Cada erro conta contra — ou a favor — da segurança.
+              </p>
+              <ul class="briefing-team">
+                <li><strong>📡 Emissor</strong><span>Prepara cada fóton com uma base e um bit. É quem cria a informação.</span></li>
+                <li><strong>🕵️ Espião</strong><span>Intercepta a transmissão e tenta medir sem deixar rastros.</span></li>
+                <li><strong>🛰️ Receptor</strong><span>Mede os fótons que chegam e reconstrói a chave a partir deles.</span></li>
+              </ul>
+              <div class="briefing-goal">
+                <strong>Objetivo final</strong>
+                <span>Compartilhar a chave e detectar a espionagem pela taxa de erro. Acima de 11%, a chave é abortada.</span>
+              </div>
+            </aside>
+          </div>
+
+          <div class="story-strip">
+            <div><span>1984</span><p>Bennett e Brassard apresentam o BB84 e mostram que a física pode proteger uma chave.</p></div>
+            <div><span>Hoje</span><p>A distribuição quântica de chaves é testada em fibras, satélites e redes metropolitanas.</p></div>
+            <div><span>Agora</span><p>Você escolhe um papel e conduz a missão do começo ao relatório final.</p></div>
+          </div>
+        </section>
+      `;
+      return;
+    }
+
+    if (state.screen === 'onboarding') {
+      const roles = [
+        { id: 'emissor', icon: '📡', name: 'Emissor', place: 'Estação Antártica', desc: 'Cria a informação e prepara os fótons.' },
+        { id: 'espiao', icon: '🕵️', name: 'Espião', place: 'Interceptador', desc: 'Mede a transmissão e tenta passar despercebido.' },
+        { id: 'receptor', icon: '🛰️', name: 'Receptor', place: 'Satélite', desc: 'Recebe, mede e gera o relatório final.' }
+      ];
+      const previews = {
+        emissor: 'Você é o <strong>Emissor</strong>. Prepara os 10 fótons, escolhendo base e bit. No fim, gera o token que carrega a informação original até o Espião.',
+        espiao: 'Você é o <strong>Espião</strong>. Recebe a transmissão do Emissor, mede os fótons e repassa o que conseguiu. O rastro das suas medições pode ser detectado pelo Receptor.',
+        receptor: 'Você é o <strong>Receptor</strong>. Recebe a transmissão do Espião, mede os fótons que chegam e gera o relatório final com a chave e a taxa de erro.'
+      };
+      stage.innerHTML = `
+        <section class="onboard">
+          <div class="onboard-head">
+            <div class="landing-kicker">Preparação da missão</div>
+            <h1 class="onboard-title">Prepare sua missão</h1>
+            <p class="sub">Cada integrante entra no próprio dispositivo, digita o próprio nome e escolhe um papel. O token passa de uma pessoa para a outra até fechar o trio.</p>
+          </div>
+
+          <div class="onboard-field">
+            <label for="playerName">Seu nome</label>
+            <input type="text" id="playerName" value="${state.playerName}" placeholder="Ex.: Ana" autocomplete="off" oninput="capturePlayers()" />
+          </div>
+
+          <div class="onboard-field">
+            <label>Seu papel na missão</label>
+            <div class="role-grid">
+              ${roles.map(r => `
+                <button class="role-card ${state.roleChosen && state.role === r.id ? 'selected' : ''}" onclick="selectRole('${r.id}')" aria-pressed="${state.roleChosen && state.role === r.id}">
+                  <span class="role-icon">${r.icon}</span>
+                  <span class="role-name">${r.name}</span>
+                  <span class="role-place">${r.place}</span>
+                  <span class="role-desc">${r.desc}</span>
+                  <span class="role-check">${state.roleChosen && state.role === r.id ? '✓ Selecionado' : 'Selecionar'}</span>
+                </button>`).join('')}
+            </div>
+          </div>
+
+          <div class="mission-preview">
+            <strong>${state.roleChosen ? 'Sua função' : 'Escolha seu papel'}</strong>
+            <p>${state.roleChosen ? previews[state.role] : 'Selecione acima o papel que você vai assumir nesta etapa. Cada pessoa do trio escolhe o próprio papel no próprio dispositivo.'}</p>
+          </div>
+
+          <div class="onboard-actions">
+            <button class="link-back" onclick="goHome()">Voltar à apresentação</button>
+            <div class="right">
+              <button class="btn-sec" onclick="toggleHistory(true)">História do BB84</button>
+              <button class="btn-primary btn-start" onclick="initGame()">Começar missão</button>
+            </div>
+          </div>
+        </section>
+      `;
+      return;
+    }
+
+    if (state.screen === 'receive') {
+      const target = state.receiveFor === 'receptor' ? 'receptor' : 'espiao';
+      const isSpy = target === 'espiao';
+      const fromName = playerLabel(isSpy ? 'emissor' : 'espiao');
+      const toName = playerLabel(isSpy ? 'espiao' : 'receptor');
+      stage.innerHTML = `
+        <div class="landing-kicker">Recepção da transmissão</div>
+        <h1>${isSpy ? 'Receba os fótons do Emissor' : 'Receba os fótons do Espião'}</h1>
+        <p class="sub">
+          ${isSpy
+            ? `Você é a <strong>segunda pessoa do trio</strong>. A transmissão saiu de <strong>${fromName}</strong> e chegou até você, <strong>${toName}</strong>. Peça o token e carregue os 10 fótons antes de interceptar.`
+            : `Você é a <strong>terceira pessoa do trio</strong>. A transmissão repassada por <strong>${fromName}</strong> chegou ao satélite. Peça o token e carregue os 10 fótons; depois, <strong>${toName}</strong> mede e gera o relatório final.`}
+        </p>
+        <div class="sync-box">
+          <strong>📥 Token recebido de ${fromName}</strong>
+          <p style="color:var(--muted); font-size:0.76rem; line-height:1.5; margin:4px 0 0;">
+            O token representa os fótons que chegaram. Ele não traz a chave pronta: a informação só é gerada depois da medição. Se você não recebeu o token, peça à pessoa que fez a etapa anterior.
+          </p>
+          <div class="sync-row">
+            <input type="text" id="receiveInput" placeholder="Cole o token aqui..." />
+            <button class="btn-copy-token" onclick="receiveToken()">Carregar</button>
           </div>
         </div>
-
-        <div class="nav-footer">
-          <span style="font-size:0.78rem; color:var(--muted);">10 Fótons &bull; Validação automática de 11%</span>
-          <button class="btn-primary" onclick="initGame()">Iniciar Simulação &rarr;</button>
+        <div class="nav-footer" style="margin-top:16px;">
+          <button class="btn-sec" onclick="startOnboarding()">Trocar papel</button>
+          <button class="btn-sec" onclick="goHome()">Ir para a apresentação</button>
         </div>
       `;
       return;
     }
 
     if (state.screen === 'sync_e') {
-      const token = btoa(JSON.stringify(state.photons));
+      const token = makeToken();
       stage.innerHTML = `
-        <h1>Emissor Finalizado!</h1>
-        <p class="sub">Os 10 fótons do Emissor foram travados. Copie o token abaixo e envie no WhatsApp para o <strong>Espião (${state.players.espiao})</strong>.</p>
+        <h1>Etapa do Emissor concluída</h1>
+        <p class="sub">
+          Os 10 fótons estão preparados. Agora a transmissão precisa chegar ao Espião para que a interceptação aconteça.
+        </p>
+        <div class="handoff-box">
+          <strong>Como continuar</strong>
+          <p><strong>Com três pessoas (recomendado):</strong> copie o token e envie para <strong>${playerLabel('espiao')}</strong>. No dispositivo do Espião, escolha o papel Espião e cole o token na tela de recebimento.</p>
+          <p class="handoff-warn"><strong>Sozinho:</strong> você pode continuar neste dispositivo e simular o Espião. O fluxo funciona, mas a experiência completa exige três pessoas diferentes.</p>
+        </div>
         <div class="sync-box">
-          <strong>📲 Token Quântico (Emissor &rarr; Espião):</strong>
+          <strong>📲 Token Quântico (Emissor para Espião):</strong>
+          <p style="color:var(--muted); font-size:0.76rem; line-height:1.5; margin:4px 0 0;">
+            O Espião só tem o que interceptar depois de receber este token. Repasse para outra pessoa sempre que possível.
+          </p>
           <div class="sync-row">
             <input type="text" readonly id="tokenInput" value="${token}" />
-            <button class="btn-copy-token" onclick="copyTokenField('tokenInput', this)">📋 Copiar Token</button>
+            <button class="btn-copy-token" onclick="copyTokenField('tokenInput', this)">📋 Copiar token e enviar</button>
           </div>
         </div>
         <div class="nav-footer" style="margin-top:16px;">
-          <button class="btn-sec" onclick="setScreen('emissor', 9)">&larr; Voltar e Revisar</button>
-          <button class="btn-primary" onclick="setScreen('espiao', 0)">Alternar para Visão do Espião &rarr;</button>
+          <button class="btn-sec" onclick="setScreen('emissor', 9)">Voltar e revisar</button>
+          <button class="btn-sec" onclick="setScreen('espiao', 0)">Continuar sozinho (demonstração)</button>
         </div>
       `;
       return;
     }
 
     if (state.screen === 'sync_s') {
-      const token = btoa(JSON.stringify(state.photons));
+      const token = makeToken();
       stage.innerHTML = `
-        <h1>Ataque do Espião Concluído!</h1>
-        <p class="sub">As medições do espião foram travadas. Copie o token abaixo e envie no WhatsApp para o <strong>Receptor (${state.players.receptor})</strong>.</p>
+        <h1>Etapa do Espião concluída</h1>
+        <p class="sub">
+          As medições do Espião estão travadas. Agora o token deve chegar ao Receptor, que faz as medições finais e gera o relatório.
+        </p>
+        <div class="handoff-box">
+          <strong>Como continuar</strong>
+          <p><strong>Com três pessoas (recomendado):</strong> copie o token e envie para <strong>${playerLabel('receptor')}</strong>. No dispositivo do Receptor, escolha o papel Receptor e cole o token na tela de recebimento.</p>
+          <p class="handoff-warn"><strong>Sozinho:</strong> você pode continuar e simular o Receptor. O relatório será gerado, mas a dinâmica completa exige três pessoas diferentes.</p>
+        </div>
         <div class="sync-box">
-          <strong>📲 Token Quântico (Espião &rarr; Receptor):</strong>
+          <strong>📲 Token Quântico (Espião para Receptor):</strong>
+          <p style="color:var(--muted); font-size:0.76rem; line-height:1.5; margin:4px 0 0;">
+            O Receptor precisa deste token para medir os fótons que chegaram. Repasse para outra pessoa sempre que possível.
+          </p>
           <div class="sync-row">
             <input type="text" readonly id="tokenInput2" value="${token}" />
-            <button class="btn-copy-token" onclick="copyTokenField('tokenInput2', this)">📋 Copiar Token</button>
+            <button class="btn-copy-token" onclick="copyTokenField('tokenInput2', this)">📋 Copiar token e enviar</button>
           </div>
         </div>
         <div class="nav-footer" style="margin-top:16px;">
-          <button class="btn-sec" onclick="setScreen('espiao', 9)">&larr; Voltar e Revisar</button>
-          <button class="btn-primary" onclick="setScreen('receptor', 0)">Alternar para Visão do Receptor &rarr;</button>
+          <button class="btn-sec" onclick="setScreen('espiao', 9)">Voltar e revisar</button>
+          <button class="btn-sec" onclick="setScreen('receptor', 0)">Continuar sozinho (demonstração)</button>
         </div>
       `;
       return;
@@ -567,17 +1174,55 @@
   }
 
   function initGame() {
-    state.players.emissor = document.getElementById('ne').value || 'Emissor';
-    state.players.espiao = document.getElementById('ns').value || 'Espião';
-    state.players.receptor = document.getElementById('nr').value || 'Receptor';
-    state.role = document.getElementById('selRole').value;
-    setScreen(state.role, 0);
+    capturePlayers();
+    if (!state.playerName) {
+      alert('Digite seu nome para começar. Cada integrante usa o próprio nome.');
+      const nameEl = document.getElementById('playerName');
+      if (nameEl) nameEl.focus();
+      return;
+    }
+    if (!state.roleChosen) {
+      alert('Escolha seu papel na missão antes de começar.');
+      return;
+    }
+    state.players[state.role] = state.playerName;
+    state.mission++;
+    state.photons.forEach(ph => {
+      ph.eC1 = ph.eC2 = ph.sC1 = ph.sC2 = ph.rC1 = ph.rC2 = null;
+    });
+    state.lastRoll = null;
+    if (state.role === 'emissor') {
+      state.receiveFor = null;
+      setScreen('emissor', 0);
+    } else {
+      state.receiveFor = state.role;
+      state.screen = 'receive';
+      state.currentIdx = 0;
+      render();
+    }
+  }
+
+  function receiveToken() {
+    const input = document.getElementById('receiveInput');
+    const token = input ? input.value.trim() : '';
+    if (!token) {
+      alert('Cole o token que você recebeu para carregar a transmissão.');
+      return;
+    }
+    importToken(token, state.receiveFor || state.role);
   }
 
   function setScreen(scr, idx) {
     state.screen = scr;
     state.currentIdx = idx;
+    state.lastRoll = null;
     if(scr === 'emissor' || scr === 'espiao' || scr === 'receptor') state.role = scr;
+    render();
+  }
+
+  function goToPhoton(idx) {
+    state.currentIdx = idx;
+    state.lastRoll = null;
     render();
   }
 
@@ -585,14 +1230,16 @@
     const idx = state.currentIdx;
     const p = state.photons[idx];
     const info = evalPhoton(p);
+    const brief = missionBrief(state.role, p, info, idx);
+    const roll = state.lastRoll && state.lastRoll.role === state.role && state.lastRoll.idx === idx ? state.lastRoll : null;
 
-    const titles = { emissor: `Turno: ${state.players.emissor} (Emissor)`, espiao: `Turno: ${state.players.espiao} (Espião)`, receptor: `Turno: ${state.players.receptor} (Receptor)` };
+    const titles = { emissor: `Turno: ${playerLabel('emissor')} (Emissor)`, espiao: `Turno: ${playerLabel('espiao')} (Espião)`, receptor: `Turno: ${playerLabel('receptor')} (Receptor)` };
 
     const slots = state.photons.map((ph, i) => {
       const inf = evalPhoton(ph);
       const ok = state.role === 'emissor' ? (ph.eC1 && ph.eC2) : (state.role === 'espiao' ? (ph.sC1 && (inf.sMatch || ph.sC2 !== null)) : (ph.rC1 && (inf.rMatch || ph.rC2 !== null)));
       const symShow = state.role === 'emissor' ? inf.eSym : (state.role === 'espiao' ? inf.sSym : (inf.rBit !== null ? inf.rBit : '—'));
-      return `<div class="p-slot ${i === idx ? 'active' : ''} ${ok ? 'done' : ''}" onclick="state.currentIdx=${i};render();">${ok ? symShow : (i+1)}</div>`;
+      return `<div class="p-slot ${i === idx ? 'active' : ''} ${ok ? 'done' : ''}" onclick="goToPhoton(${i})">${ok ? symShow : (i+1)}</div>`;
     }).join('');
 
     let stateBadgeHtml = '';
@@ -624,9 +1271,10 @@
       const ready = lockedC1 && lockedC2;
       arena = `
         <div class="laser-view">
+          ${ready ? '<span class="photon-beam"></span>' : ''}
           <div style="font-size:0.75rem; color:var(--muted);">FÓTON GERADO:</div>
           <div class="polarizer-icon" id="polarizerAnim">${ready ? info.eSym : '?'}</div>
-          <div style="font-size:0.82rem; color:var(--cyan); font-weight:600;">${ready ? `Base ${info.eB} &bull; Bit${info.eBit}` : 'Jogue as moedas'}</div>
+          <div style="font-size:0.82rem; color:var(--cyan); font-weight:600;">${ready ? `Base ${info.eB} e Bit ${info.eBit}` : 'Jogue as moedas'}</div>
         </div>
         ${stateBadgeHtml}
         <div class="coins-area">
@@ -638,6 +1286,7 @@
               <button class="btn-choice ${p.eC1==='Coroa'?'selected':''}" onclick="pick('eC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('eC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${rollNote('eC1', roll)}
             ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
           </div>
           <div class="coin-card ${lockedC2 ? 'locked' : ''}">
@@ -648,6 +1297,7 @@
               <button class="btn-choice ${p.eC2==='Coroa'?'selected':''}" onclick="pick('eC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('eC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${rollNote('eC2', roll)}
             ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Bit travado</div>' : ''}
           </div>
         </div>
@@ -660,6 +1310,7 @@
 
       arena = `
         <div class="laser-view">
+          ${ready ? '<span class="photon-beam"></span>' : ''}
           <div style="text-align:right;"><div style="font-size:0.7rem; color:var(--muted);">CHEGOU:</div><div style="font-size:1rem; font-weight:700; color:var(--cyan);">${info.eSym || '—'}</div></div>
           <div class="polarizer-icon" style="border-color:${ready ? (info.sMatch ? 'var(--emerald)' : 'var(--rose)') : 'var(--border)'}">${ready ? info.sSym : '?'}</div>
           <div style="text-align:left;"><div style="font-size:0.7rem; color:var(--muted);">REPASSADO:</div><div style="font-size:1rem; font-weight:700; color:var(--amber);">${ready ? info.sSym : '...'}</div></div>
@@ -674,6 +1325,7 @@
               <button class="btn-choice ${p.sC1==='Coroa'?'selected':''}" onclick="pick('sC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('sC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${rollNote('sC1', roll)}
             ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
           </div>
           <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
@@ -684,6 +1336,7 @@
               <button class="btn-choice ${p.sC2==='Coroa'?'selected':''}" onclick="pick('sC2','Coroa')">Coroa (0) <small>Chutar 0</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('sC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${rollNote('sC2', roll)}
             ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Chute travado</div>' : ''}
           </div>
         </div>
@@ -701,6 +1354,7 @@
 
       arena = `
         <div class="laser-view">
+          ${ready ? '<span class="photon-beam"></span>' : ''}
           <div style="text-align:right;"><div style="font-size:0.7rem; color:var(--muted);">RECEBEU:</div><div style="font-size:1rem; font-weight:700; color:var(--amber);">${info.sSym || '—'}</div></div>
           <div class="polarizer-icon">${ready ? info.rBit : '?'}</div>
           <div style="text-align:left;"><div style="font-size:0.7rem; color:var(--muted);">LIDO:</div><div style="font-size:1rem; font-weight:700; color:var(--emerald);">${ready ? `Bit ${info.rBit}` : '...'}</div></div>
@@ -715,6 +1369,7 @@
               <button class="btn-choice ${p.rC1==='Coroa'?'selected':''}" onclick="pick('rC1','Coroa')">Coroa (X) <small>Diagonal</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('rC1', this)">🪙 Jogar Moeda 1 (Real)</button>
+            ${rollNote('rC1', roll)}
             ${lockedC1 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Base travada</div>' : ''}
           </div>
           <div class="coin-card ${(!needC2 || lockedC2) ? 'locked' : ''}">
@@ -725,6 +1380,7 @@
               <button class="btn-choice ${p.rC2==='Coroa'?'selected':''}" onclick="pick('rC2','Coroa')">Coroa (0) <small>Bit 0</small></button>
             </div>
             <button class="btn-coin-flip" onclick="flipCoinAnim('rC2', this)">🪙 Jogar Moeda 2 (Real)</button>
+            ${rollNote('rC2', roll)}
             ${lockedC2 ? '<div style="font-size:0.68rem; color:var(--emerald); margin-top:4px; text-align:center;">🔒 Leitura travada</div>' : ''}
           </div>
         </div>
@@ -744,7 +1400,19 @@
 
     stage.innerHTML = `
       <h1>${titles[state.role]}</h1>
-      <p class="sub">Fóton <strong>${idx + 1} de 10</strong>. Jogue a moeda real com animação ou selecione manualmente. As escolhas travam automaticamente após o lançamento.</p>
+      <p class="sub">Fóton <strong>${idx + 1} de 10</strong>. Siga o guia da missão: ele explica o que aconteceu e qual é o próximo passo.</p>
+
+      <aside class="mission-guide tone-${brief.tone}">
+        <div class="guide-avatar">${brief.icon}</div>
+        <div class="guide-body">
+          <div class="guide-head">
+            <span class="guide-title">${brief.title}</span>
+            <span class="guide-step">Fóton ${idx + 1}/10 &bull; ${brief.step}</span>
+          </div>
+          <p class="guide-text">${brief.text}</p>
+          ${roll ? `<div class="roll-result">🎲 ${roll.text}</div>` : ''}
+        </div>
+      </aside>
 
       <div class="photon-track">${slots}</div>
 
@@ -756,23 +1424,14 @@
         ${arena}
       </div>
 
-      <div class="sync-box" style="margin-bottom:12px;">
-        <strong>🔗 Sincronização via WhatsApp com o Trio:</strong><br>
-        <span style="color:var(--muted); font-size:0.75rem;">Cole o token do colega aqui para carregar a etapa dele:</span>
-        <div class="sync-row">
-          <input type="text" id="importInput" placeholder="Cole o token aqui..." />
-          <button class="btn-copy-token" style="background:var(--surface-card); color:var(--cyan); border:1px solid var(--cyan);" onclick="importToken(document.getElementById('importInput').value)">📥 Carregar</button>
-        </div>
-      </div>
-
       <div class="nav-footer">
-        <button class="btn-sec" onclick="if(state.currentIdx>0){state.currentIdx--;render();}" ${idx===0?'disabled':''}>&larr; Anterior</button>
+        <button class="btn-sec" onclick="if(state.currentIdx>0){goToPhoton(state.currentIdx-1);}" ${idx===0?'disabled':''}>Anterior</button>
         <div style="display:flex; gap:6px;">
           ${idx < 9 ? `
-            <button class="btn-primary" onclick="state.currentIdx++;render();" ${!currentOk?'disabled':''}>Próximo Fóton &rarr;</button>
+            <button class="btn-primary" onclick="goToPhoton(state.currentIdx+1)" ${!currentOk?'disabled':''}>Próximo Fóton</button>
           ` : `
             <button class="btn-primary" style="background:var(--emerald);" onclick="finishRole('${state.role}')" ${!allDone?'disabled':''}>
-              ${state.role === 'emissor' ? 'Gerar Token para o Espião ➔' : (state.role === 'espiao' ? 'Gerar Token para o Receptor ➔' : 'Ver Relatório Final ➔')}
+              ${state.role === 'emissor' ? 'Gerar Token para o Espião' : (state.role === 'espiao' ? 'Gerar Token para o Receptor' : 'Ver Relatório Final')}
             </button>
           `}
         </div>
@@ -784,12 +1443,16 @@
     const p = state.photons[state.currentIdx];
     if (p[field] !== null) return;
     p[field] = val;
+    setRoll(field, val, 'manual');
     render();
   }
 
   function flipCoinAnim(field, btnEl) {
     const p = state.photons[state.currentIdx];
     if (p[field] !== null) return;
+    const mission = state.mission;
+    const idx = state.currentIdx;
+    const role = state.role;
 
     const result = Math.random() < 0.5 ? 'Cara' : 'Coroa';
     const coin = document.getElementById('coin-' + field);
@@ -801,7 +1464,9 @@
     btnEl.innerText = '🪙 Girando...';
 
     setTimeout(() => {
+      if (state.mission !== mission || state.role !== role || state.currentIdx !== idx) return;
       p[field] = result;
+      setRoll(field, result, 'sorteio');
       render();
     }, 1520);
   }
@@ -822,29 +1487,56 @@
       else if (role === 'espiao') { ph.sC1 = ph.sC1 || (Math.random()<0.5?'Cara':'Coroa'); const inf = evalPhoton(ph); if(!inf.sMatch && ph.sC2 === null) ph.sC2 = ph.sC2 || (Math.random()<0.5?'Cara':'Coroa'); }
       else if (role === 'receptor') { ph.rC1 = ph.rC1 || (Math.random()<0.5?'Cara':'Coroa'); const inf = evalPhoton(ph); if(!inf.rMatch && ph.rC2 === null) ph.rC2 = ph.rC2 || (Math.random()<0.5?'Cara':'Coroa'); }
     });
-    state.currentIdx = 9; render();
+    state.currentIdx = 9;
+    state.lastRoll = null;
+    render();
   }
 
   function finishRole(role) {
+    state.lastRoll = null;
     if (role === 'emissor') state.screen = 'sync_e';
     else if (role === 'espiao') state.screen = 'sync_s';
     else state.screen = 'relatorio';
     render();
   }
 
-  function importToken(token) {
+  function importToken(token, nextScreen) {
     try {
       const decoded = JSON.parse(atob(token));
-      if (Array.isArray(decoded) && decoded.length === 10) {
-        state.photons = decoded;
-        alert('✅ Dados sincronizados com sucesso!');
-        render();
+      const photons = Array.isArray(decoded) ? decoded : decoded.photons;
+      if (!Array.isArray(photons) || photons.length !== 10) throw new Error('formato');
+      const target = nextScreen || state.role;
+      const emissorDone = photons.every(p => p && p.eC1 && p.eC2);
+      const espiaoDone = photons.every(p => {
+        if (!p || !p.eC1 || !p.eC2 || !p.sC1) return false;
+        const inf = evalPhoton(p);
+        return inf.sMatch || p.sC2 !== null;
+      });
+      if (target === 'espiao' && !emissorDone) {
+        alert('Este token não contém a transmissão do Emissor completa (faltam fótons preparados). Use o token gerado ao final da etapa do Emissor.');
+        return;
       }
-    } catch(e) { alert('❌ Token inválido.'); }
+      if (target === 'receptor' && !espiaoDone) {
+        alert('Este token não contém a transmissão do Espião completa (faltam medições). Use o token gerado ao final da etapa do Espião.');
+        return;
+      }
+      state.photons = photons;
+      if (!Array.isArray(decoded) && decoded.players) {
+        const incoming = {};
+        ['emissor', 'espiao', 'receptor'].forEach(role => {
+          incoming[role] = cleanName(decoded.players[role]) || state.players[role];
+        });
+        state.players = { ...incoming, [target]: state.playerName || incoming[target] };
+      }
+      if (nextScreen) setScreen(nextScreen, 0);
+      else render();
+    } catch(e) {
+      alert('❌ Token inválido. Copie o código completo, sem espaços extras.');
+    }
   }
 
   function renderReport(stage) {
-    const data = state.photons.map(evalPhoton);
+    const data = state.photons.map(p => ({ id: p.id, ...evalPhoton(p) }));
     const kept = data.filter(d => d.kept);
     const N = kept.length;
     const discarded = 10 - N;
@@ -863,48 +1555,50 @@
     const rows = data.map(d => `
       <tr>
         <td><strong>${d.id}</strong></td>
-        <td>${d.eB}&bull;${d.eBit}</td>
+        <td>${d.eB} e ${d.eBit}</td>
         <td><strong>${d.eSym}</strong></td>
         <td>${d.sB || '—'}</td>
         <td><strong>${d.sSym || '—'}</strong></td>
         <td>${d.rB || '—'}</td>
         <td>${d.rBit !== null ? d.rBit : '—'}</td>
         <td><strong>${d.kept ? 'MANTIDO' : 'DESCARTADO'}</strong></td>
-        <td style="color:${d.error?'#dc2626':'#059669'}; font-weight:700;">${d.kept ? (d.error ? 'ERRO' : 'OK') : '—'}</td>
+        <td style="color:${d.error?'#b91c1c':'#047857'}; font-weight:700;">${d.kept ? (d.error ? 'ERRO' : 'OK') : '—'}</td>
       </tr>
     `).join('');
 
     stage.innerHTML = `
       <div class="no-print">
         <h1>Relatório Final &bull; Prática 1 (BB84)</h1>
-        <p class="sub">Resultados consolidados com peneiramento, QBER e validação de segurança de 11%.</p>
+        <p class="sub">Relatório gerado pelo <strong>Receptor</strong> a partir dos fótons medidos, com peneiramento, QBER e validação de segurança de 11%.</p>
 
         <div class="metrics-grid">
-          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">MANTIDOS (N)</div><div class="val">${N} / ${discarded}</div></div>
+          <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">MANTIDOS / DESCARTADOS</div><div class="val">${N} / ${discarded}</div></div>
           <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">QBER (2 BITS)</div><div class="val" style="color:${qber>11?'var(--rose)':'var(--emerald)'}">${qber.toFixed(0)}%</div></div>
           <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">TAXA GLOBAL (M/N)</div><div class="val" style="color:${globalRate>11?'var(--rose)':'var(--emerald)'}">${globalRate.toFixed(1)}%</div></div>
           <div class="metric-card"><div style="font-size:0.68rem; color:var(--muted);">STATUS 11%</div><div class="val" style="font-size:0.88rem; color:${qber>11||globalRate>11?'var(--rose)':'var(--amber)'}">${qber>11||globalRate>11?'🚨 ESPIÃO DETECTADO':'⚠️ ALERTA'}</div></div>
         </div>
 
         <div class="nav-footer" style="margin-bottom:12px;">
-          <button class="btn-sec" onclick="setScreen('receptor', 9)">&larr; Voltar</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-sec" onclick="goHome()">Início</button>
+            <button class="btn-sec" onclick="setScreen('receptor', 9)">Voltar</button>
+          </div>
           <div style="display:flex; gap:6px;">
             <button class="btn-primary" onclick="copyRep()">📋 Copiar Relatório</button>
-            <button class="btn-primary" style="background:var(--indigo); color:#fff;" onclick="window.print()">🖨️ Salvar em PDF</button>
+            <button class="btn-primary" style="background:var(--indigo); color:var(--on-accent);" onclick="window.print()">🖨️ Salvar em PDF</button>
           </div>
         </div>
       </div>
 
       <div class="report-sheet" id="repContent">
-        <h2>Relatório da Prática 1: O Token do Satélite Quântico (BB84)</h2>
-        <p><strong>Curso 2 – Projeto Córtex:</strong> Princípios da Física Quântica &bull; Módulo 1<br>
-        <strong>Formadora:</strong> Dra. Judite &bull; <strong>Mentora:</strong> Dra. Viridiana Alves de Lara</p>
+        <h2>Relatório da Prática: O Token do Satélite Quântico (BB84)</h2>
+        <p>Atividade prática sobre distribuição quântica de chaves, simulação de espionagem e detecção de erros.</p>
 
         <h3>1. Identificação do Trio</h3>
         <ul>
-          <li><strong>Emissor:</strong> ${state.players.emissor}</li>
-          <li><strong>Espião:</strong> ${state.players.espiao}</li>
-          <li><strong>Receptor:</strong> ${state.players.receptor}</li>
+          <li><strong>Emissor:</strong> ${playerLabel('emissor')}</li>
+          <li><strong>Espião:</strong> ${playerLabel('espiao')}</li>
+          <li><strong>Receptor:</strong> ${playerLabel('receptor')}</li>
         </ul>
 
         <h3>2. Tabela Consolidada das 10 Rodadas</h3>

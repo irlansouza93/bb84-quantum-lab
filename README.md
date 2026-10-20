@@ -4,7 +4,9 @@
 
 Em uma missão de três pessoas, você envia uma chave secreta da Estação Antártica para um satélite enquanto um espião tenta interceptá-la. A segurança não vem de uma senha mais difícil: vem das leis da mecânica quântica. Cada fóton carrega uma base e um bit; qualquer tentativa de espionagem deixa erros detectáveis.
 
-O projeto é um **simulador educacional do protocolo BB84** (Bennett & Brassard, 1984), feito em um único arquivo HTML, sem dependências e sem servidor. Roda no navegador, inclusive em celular.
+A apresentação conta a origem do protocolo — proposto em **1984** por Charles Bennett e Gilles Brassard — e convida você a testar a ideia na prática. O botão **Conhecer a história** abre uma wiki curta sobre o BB84, com link para o [verbete da Wikipédia](https://pt.wikipedia.org/wiki/BB84).
+
+O projeto é um **simulador educacional do protocolo BB84**, feito em um único arquivo HTML, sem dependências e sem servidor. Roda no navegador, inclusive em celular, com temas claro e escuro.
 
 ---
 
@@ -20,6 +22,7 @@ O simulador transforma esse experimento em um jogo de cartas e moedas, com sincr
 ## O que você vai aprender
 
 - O que são **fótons**, **polarização** e **bases** retilínea (`+`) e diagonal (`X`).
+- Que cada fóton é o **veículo de 1 bit de informação** — a base é o alfabeto, a polarização é a escrita e o bit é a mensagem.
 - Como quatro estados quânticos codificam os bits `0` e `1`.
 - Por que medir com a base errada causa **colapso** e gera erros.
 - Por que o **teorema da não clonagem** impede uma cópia perfeita.
@@ -33,22 +36,31 @@ O simulador transforma esse experimento em um jogo de cartas e moedas, com sincr
 | --- | --- | --- |
 | 📡 **Emissor** | Escolhe base e bit de cada fóton. | Gerar uma chave que o Receptor consiga reconstruir. |
 | 🕵️ **Espião** | Mede cada fóton com uma base secreta. | Passar despercebido (erro ≤ 11%) e adivinhar a chave. |
-| 🛰️ **Receptor** | Mede os fótons com sua própria base. | Obter a mesma chave do Emissor e detectar a espionagem. |
+| 🛰️ **Receptor** | Mede os fótons com sua própria base. | Obter a mesma chave do Emissor, detectar a espionagem e gerar o relatório final. |
+
+## Fluxo do jogo
+
+1. **Apresentação:** história curta do BB84, contexto da missão, função de cada papel e objetivo final. Botões **Iniciar prática** e **Conhecer a história**.
+2. **Preparação:** cada integrante entra no próprio dispositivo, digita o próprio nome e escolhe um papel — Emissor, Espião ou Receptor. A experiência completa usa três pessoas diferentes.
+3. **Missão:** o guia narrativo acompanha cada fóton, explica o que aconteceu e indica o próximo passo.
+4. **Recepção da transmissão:** o Espião recebe o token do Emissor; o Receptor recebe o token do Espião. A etapa só começa depois dessa recepção.
+5. **Resultado dos sorteios:** após cada moeda girar, aparece a mensagem do que caiu e o que isso significa.
+6. **Relatório:** gerado pelo Receptor, com tabela das rodadas, peneiramento, chaves e taxa de erro.
 
 ## Como jogar
 
 ### Em trio (um dispositivo por pessoa)
 
-1. Abra o simulador e preencha os nomes do trio.
+1. Abra o simulador, clique em **Iniciar prática**, digite seu nome e escolha seu papel. Repita o processo no dispositivo de cada integrante, com um papel diferente por pessoa.
 2. O **Emissor** joga as moedas dos 10 fótons e gera o token.
-3. Envie o token ao **Espião** (WhatsApp, chat, etc.). Ele importa, faz suas medições e gera um novo token.
-4. Envie esse token ao **Receptor**, que faz suas medições.
-5. Ao final, o relatório mostra a tabela das rodadas, as chaves e a taxa de erro.
+3. Envie o token ao **Espião** (WhatsApp, chat, etc.). No dispositivo dele, escolha o papel Espião e cole o token na tela de **Recepção da transmissão**. Depois ele mede e gera um novo token.
+4. Envie esse token ao **Receptor**. Ele o carrega na tela de recebimento, faz as medições e gera o **relatório final**.
+5. O relatório mostra a tabela das rodadas, as chaves e a taxa de erro.
 
 ### Sozinho (modo demonstração)
 
 1. Escolha um papel e jogue as rodadas, ou use **⚡ Preencher Restantes**.
-2. Gere o token e use **Alternar para Visão do Espião/Receptor**.
+2. Ao concluir cada etapa, use **Continuar sozinho (demonstração)**: os dados seguem carregados e não é preciso colar token. O fluxo funciona, mas a lógica do Espião só faz sentido quando outra pessoa preparou os fótons.
 3. Repita até o relatório final. Para ver o efeito da espionagem, rode uma partida com o Espião e outra sem.
 
 ## A física em um minuto
@@ -94,9 +106,12 @@ O botão **📖 Manual de Instruções** abre um guia completo com:
 
 - elenco e objetivos;
 - explicação de fótons, bases, superposição, colapso e não clonagem;
+- o papel do fóton como veículo de 1 bit de informação;
 - tabelas das moedas e dos quatro estados;
-- passo a passo do jogo;
-- explicação do token e do relatório;
+- passo a passo do jogo, da apresentação ao relatório;
+- guia narrativo que reage a cada escolha;
+- o fluxo do token entre Emissor, Espião e Receptor, sem importação durante a medição;
+- explicação do relatório e do limite de 11%;
 - limitações didáticas e glossário.
 
 ## Rodando localmente
@@ -160,7 +175,7 @@ Este é um modelo simplificado, não uma implementação criptográfica:
 
 | Termo | Definição |
 | --- | --- |
-| **Fóton** | Quantum de luz; a menor porção de energia luminosa. |
+| **Fóton** | Quantum de luz; no BB84, é o veículo que transporta 1 bit de informação. |
 | **Polarização** | Orientação da oscilação da luz, usada para codificar bits. |
 | **Base** | Par de direções usado para preparar ou medir um fóton. |
 | **Superposição** | Estado quântico que combina possibilidades antes da medição. |
@@ -169,12 +184,10 @@ Este é um modelo simplificado, não uma implementação criptográfica:
 | **Peneiramento** | Seleção dos bits em que as bases coincidiram (sifting). |
 | **QBER** | Taxa de erro quântica entre os bits mantidos. |
 | **Chave** | Sequência de bits compartilhada para cifrar mensagens. |
+| **Token** | Texto em Base64 que transporta o estado dos 10 fótons entre etapas; gerado por quem conclui uma etapa e carregado por quem inicia a próxima. |
 
 ## Créditos
 
-**bb84-quantum-lab** integra o **Projeto Córtex — Curso 2: Princípios da Física Quântica**.
+**bb84-quantum-lab** é um simulador didático de código aberto para explorar o protocolo BB84 em aulas de física, computação e segurança da informação.
 
-- Formadora: Dra. Judite
-- Mentora: Dra. Viridiana Alves de Lara
-
-Simulador didático de código aberto para explorar o protocolo BB84. Referência original: Bennett, C. H.; Brassard, G. *Quantum cryptography: Public key distribution and coin tossing* (1984).
+Referência original: Bennett, C. H.; Brassard, G. *Quantum cryptography: Public key distribution and coin tossing* (1984).
