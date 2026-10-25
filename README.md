@@ -2,7 +2,7 @@
 
 # BB84 Quantum Lab
 
-**Teste a segurança quântica na prática.**
+**Uma parceria com a Uinversidade Virtual do Paraná (UVPR).**
 
 Um simulador educacional do protocolo BB84: três pessoas, dez fótons e um espião no caminho.
 
