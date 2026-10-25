@@ -2,7 +2,7 @@
 
 # BB84 Quantum Lab
 
-**Uma parceria com a Uinversidade Virtual do Paraná (UVPR).**
+**Uma parceria com a Universidade Virtual do Paraná (UVPR).**
 
 Um simulador educacional do protocolo BB84: três pessoas, dez fótons e um espião no caminho.
 
